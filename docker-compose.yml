@@ -24,10 +24,25 @@ services:
     command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       PYTHONUNBUFFERED: "1"
     volumes:
       - ./backend:/app
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - kindle_db:/var/lib/postgresql/data
 
 volumes:
   frontend_node_modules:
+  kindle_db:
