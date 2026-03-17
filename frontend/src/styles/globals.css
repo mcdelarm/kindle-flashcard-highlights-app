@@ -7,10 +7,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html, body, #root {
+  min-height: 100%;
+}
+
 .app {
   margin: 0 auto;
   background-color: #FBFEFD;
   max-width: 1440px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header styles */
@@ -18,6 +25,7 @@ body {
 header {
   height: 72px;
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   padding: 0px 32px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
@@ -38,6 +46,10 @@ header {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.header-logo {
+  transform: translateY(1px);
 }
 
 .header-title {
@@ -116,3 +128,98 @@ header {
 }
 
 /* End of header styles */
+
+/* Empty flashcards/highlights state styles */
+
+.empty-state-container {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 64px 32px;
+  width: 100%;
+}
+
+.empty-state {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  max-width: 420px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  align-items: center;
+  background-color: rgb(230, 255, 250);
+  border-radius: 50%;
+  box-sizing: border-box;
+  display: flex;
+  height: 72px;
+  justify-content: center;
+  margin-bottom: 24px;
+  width: 72px;
+  text-align: center;
+}
+
+.empty-icon-container {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  height: 32px;
+  justify-content: center;
+  text-align: center;
+  width: 32px;
+}
+
+.empty-state-title {
+  color: rgb(15, 23, 34);
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  margin-top: 0px;
+  text-align: center;
+}
+
+.empty-state-desc {
+  color: rgb(156, 163, 175);
+  font-size: 15px;
+  font-weight: 400;
+  margin: 0px 0px 32px 0px;
+  text-align: center;
+}
+
+.empty-state-link {
+  align-items: center;
+  background-color: rgb(16, 185, 129);
+  border-radius: 6px;
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+  border: 1.5px solid rgba(0, 0, 0, 0);
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: center;
+  padding: 8px 16px;
+  text-align: center;
+}
+
+.upload-icon-container {
+  align-items: center;
+  box-sizing: border-box;
+  display: flex;
+  height: 18px;
+  justify-content: center;
+  text-align: center;
+  width: 18px;
+}
+
+.upload-icon-container svg {
+  transform: translateY(1px);
+}
+
+/* End of empty flashcards/highlights state styles */

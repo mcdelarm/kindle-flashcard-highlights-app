@@ -1,0 +1,16 @@
+.flashcards-page {
+  display: flex;
+  flex-basis: 0%;
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-direction: column;
+  padding: 48px 0px;
+}
+
+.flashcards-page-container {
+  box-sizing: border-box;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 0px 32px;
+  width: 100%;
+}
