@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, TIMESTAMP, Boolean
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
@@ -39,6 +39,9 @@ class Flashcard(Base):
   context_sentence = Column(Text, nullable=True)
   created_at = Column(TIMESTAMP, default=datetime.utcnow)
   book_id = Column(Integer, ForeignKey('books.id', ondelete='CASCADE'))
+  known = Column(Boolean, default=False) 
+  location = Column(String(255), nullable=True)
+  part_of_speech = Column(String(50), nullable=True)
 
   owner = relationship('User', back_populates='flashcards')
   book = relationship('Book', back_populates='flashcards')
