@@ -40,6 +40,7 @@
   justify-content: space-between;
   padding: 8px 12px;
   color: rgb(156, 163, 175);
+  cursor: pointer;
 }
 
 .sidebar-section-item.active {
@@ -59,7 +60,6 @@
 
 .highlights-icon-container {
   align-items: center;
-  color: inherit;
   display: flex;
   justify-content: center;
 }
@@ -75,4 +75,147 @@
   font-size: 11px;
   font-weight: 500;
   padding: 2px 6px;
+}
+
+.highlights-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.highlights-top-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-container {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  background-color: rgb(251, 254, 253);
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  height: 36px;
+  box-sizing: border-box;
+  max-width: 400px;
+  padding: 0px 12px;
+  color: rgb(156, 163, 175);
+}
+
+.search-input {
+  background-color: transparent;
+  border: none;
+  font-size: 14px;
+  margin-left: 8px;
+  font-weight: 400;
+  width: 100%;
+}
+
+.search-input:focus {
+  outline: none;
+  color: rgb(15, 23, 34);
+}
+
+.highlights-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.highlight-card {
+  background-color: rgb(255, 255, 255);
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  padding: 24px;
+}
+
+.highlight-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 20px;
+}
+
+.highlight-text {
+  border-left: 3px solid rgb(16, 185, 129);
+  font-size: 16px;
+  font-weight: 400;
+  padding-left: 16px;
+  line-height: 24px;
+}
+
+.highlight-meta {
+  display: flex;
+  align-items: center;
+  color: rgb(156, 163, 175);
+  font-size: 13px;
+  font-weight: 400;
+  justify-content: flex-start;
+}
+
+.highlight-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.highlight-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.highlight-book-cover {
+  background-color: rgb(243, 244, 246);
+  border-radius: 2px;
+  box-sizing: border-box;
+  height: 28px;
+  object-fit: cover;
+  width: 20px;
+}
+
+.highlight-book-title {
+  color: rgb(15, 23, 34);
+  font-weight: 500;;
+}
+
+.highlight-card-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  justify-content: space-between;  
+  color: rgb(156, 163, 175);
+}
+
+.copy-delete-container {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  color: rgb(15, 23, 34);
+  font-size: 14px;
+}
+
+.copy-delete-btn {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  border:none;
+  background-color: transparent;
+  color: rgb(15, 23, 34);
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  justify-content: center;
+  font-family: Inter;
+}
+
+.copy-delete-btn svg {
+  stroke: rgb(15, 23, 34);
 }

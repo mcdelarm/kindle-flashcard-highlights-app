@@ -223,3 +223,66 @@ header {
 }
 
 /* End of empty flashcards/highlights state styles */
+
+/* SingleSelect component styles */
+
+.select-container {
+  position: relative;;
+}
+
+.select-dropdown {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  gap: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgb(15, 23, 34);
+}
+
+.dropdown-title {
+  color: rgb(156, 163, 175);
+}
+
+.select-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.select-icon-container svg {
+  display: block;
+}
+
+.select-dropdown-menu {
+  background-color: rgb(255, 255, 255);
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 4px 12px 0px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 50;
+}
+
+.select-dropdown-menu-item {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  color: rgb(15, 23, 34);
+  font-size: 14px;
+  font-weight: 400;
+  justify-content: space-between;
+  padding: 8px 12px;
+}
+
+.select-dropdown-menu-item.selected {
+  font-weight: 500;
+}
+
+/* End of SingleSelect component styles */

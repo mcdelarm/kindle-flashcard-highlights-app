@@ -166,7 +166,7 @@ const FlashCardPage = () => {
                     </div>
                     {isContextOpen ? "Hide Context" : "Show Context"}
                   </div>
-                  <button
+                  <div
                     className="dropdown-icon-container"
                     onClick={() => setIsContextOpen(!isContextOpen)}
                   >
@@ -175,7 +175,7 @@ const FlashCardPage = () => {
                     ) : (
                       <DropDownOpenIcon />
                     )}
-                  </button>
+                  </div>
                 </div>
                 {isContextOpen && (
                   <div className="context-body">
