@@ -1,0 +1,78 @@
+.highlights-page-container {
+  display: flex;
+  flex: 1;
+  gap: 32px;
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 32px 0px;
+  width: 100%;
+}
+
+.highlights-aside {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 24px;
+  width: 260px;
+}
+
+.sidebar-section-title {
+  color: rgb(156, 163, 175);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-section-item {
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: space-between;
+  padding: 8px 12px;
+  color: rgb(156, 163, 175);
+}
+
+.sidebar-section-item.active {
+  background-color: rgb(230, 255, 250);
+  color: rgb(15, 23, 34);
+}
+
+.sidebar-item-left {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.highlights-icon-container {
+  align-items: center;
+  color: inherit;
+  display: flex;
+  justify-content: center;
+}
+
+.highlights-icon-container svg {
+  display: block;
+}
+
+.sidebar-badge {
+  background-color: rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  color: rgb(15, 23, 34);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 6px;
+}
