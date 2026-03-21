@@ -3,8 +3,16 @@ import { useState } from "react";
 import FileUpload from "../components/FileUpload";
 
 const LandingPage = () => {
-  const [vocabFile, setVocabFile] = useState(null);
-  const [clippingsFile, setClippingsFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadMode, setUploadMode] = useState("vocab");
+
+  const generateText = uploadMode === "vocab" ? "Generate Flashcards" : "Generate Highlights";
+
+  const handleGenerateClick = () => {
+    if (!selectedFile) return;
+
+    //Need to make an API call to the backend to process the uploaded
+  }
 
   return (
     <main className="landing-page-container">
@@ -21,74 +29,16 @@ const LandingPage = () => {
           encountered.
         </div>
         <div className="file-upload-container">
-          <div className="vocab-upload-container">
-            <div className="file-upload-container-top">
-              <div className="file-upload-pill">vocab.db &rarr; Flashcards</div>
-              <div className="file-upload-slogan">
-                Build vocabulary flashcards
-              </div>
-              <div className="file-upload-description">
-                Upload your Kindle vocab.db file to generate flashcards with the
-                saved word, definition, and reading context.
-              </div>
+          <div className="upload-tabs">
+            <div className={`upload-tab-item ${uploadMode === "vocab" ? "active" : ""}`} onClick={() => setUploadMode("vocab")}>
+              Vocabulary
             </div>
-            <div className="file-upload-container-bottom">
-              <FileUpload
-                accept={{
-                  "application/x-sqlite3": [".db", ".sqlite", ".sqlite3"],
-                }}
-                buttonLabel="Choose vocab file"
-                emptyTitle="Upload your Kindle vocab file"
-                emptySubtitle="Drag and drop a vocab.db file here, or click to browse from your device."
-                activeTitle="Drop your vocab file here"
-                activeSubtitle="Release to attach the Kindle database for flashcard generation."
-                acceptedFormatsLabel=".db, .sqlite, .sqlite3"
-                iconLabel="DB"
-                variant="vocab"
-                onFileSelect={setVocabFile}
-              />
-              {vocabFile ? (
-                <div className="file-upload-footer">
-                  Ready to process: {vocabFile.name}
-                </div>
-              ) : null}
+            <div className={`upload-tab-item ${uploadMode === "clippings" ? "active" : ""}`} onClick={() => setUploadMode("clippings")}>
+              Highlights
             </div>
           </div>
-          <div className="clippings-upload-container">
-            <div className="file-upload-container-top">
-              <div className="file-upload-pill">
-                My Clippings.txt &rarr; Highlights
-              </div>
-              <div className="file-upload-slogan">
-                Import your reading highlights
-              </div>
-              <div className="file-upload-description">
-                Upload your My Clippings.txt file to group your highlights by
-                book, location, and date so they're easier to search later.
-              </div>
-            </div>
-            <div className="file-upload-container-bottom">
-              <FileUpload
-                accept={{
-                  "text/plain": [".txt"],
-                }}
-                buttonLabel="Choose highlights file"
-                emptyTitle="Upload your My Clippings file"
-                emptySubtitle="Drop the exported text file here, or browse to select your Kindle highlights."
-                activeTitle="Drop your highlights file here"
-                activeSubtitle="Release to attach the text export and organize highlights by book."
-                acceptedFormatsLabel=".txt"
-                iconLabel="TXT"
-                variant="clippings"
-                onFileSelect={setClippingsFile}
-              />
-              {clippingsFile ? (
-                <div className="file-upload-footer file-upload-footer-clippings">
-                  Ready to process: {clippingsFile.name}
-                </div>
-              ) : null}
-            </div>
-          </div>
+          <FileUpload mode={uploadMode} selectedFile={selectedFile} onChange={setSelectedFile} />
+          <button disabled={!selectedFile} className="generate-btn" onClick={handleGenerateClick}>{generateText}</button>
         </div>
       </section>
       <section className="landing-page-middle">

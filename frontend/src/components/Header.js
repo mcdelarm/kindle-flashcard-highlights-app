@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import '../styles/globals.css';
+import "../styles/globals.css";
 
 const Header = () => {
   return (
@@ -18,6 +18,15 @@ const Header = () => {
             className={({ isActive }) =>
               `header-nav-link${isActive ? " selected" : ""}`
             }
+            to="/"
+            end
+          >
+            Home
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `header-nav-link${isActive ? " selected" : ""}`
+            }
             to="/flashcards"
             end
           >
@@ -31,15 +40,6 @@ const Header = () => {
             end
           >
             Highlights
-          </NavLink>
-          <NavLink
-            className={({ isActive }) =>
-              `header-nav-link${isActive ? " selected" : ""}`
-            }
-            to="/"
-            end
-          >
-            How it works
           </NavLink>
         </nav>
       </div>
