@@ -93,3 +93,25 @@ async def upload_clippings(file: UploadFile = File(...)):
     session_id = store_session({"type": "clippings", "data": parsed_text})
 
     return {"session_id": session_id}
+
+@router.post("/vocab")
+async def upload_vocab(file: UploadFile = File(...)):
+    return
+
+
+@router.get("/{session_id}")
+def get_upload_session(session_id: str):
+    session_data = redis_client.get(session_id)
+
+    if not session_data:
+        raise HTTPException(status_code=404, detail="Session not found or expired")
+    
+    session = json.loads(session_data)
+
+    response = {
+        'session_id': session_id,
+        'type': session.get('type'),
+        'data': session.get('data')
+
+    }
+    return response

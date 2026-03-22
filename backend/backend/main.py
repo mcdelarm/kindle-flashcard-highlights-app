@@ -1,6 +1,7 @@
 from fastapi import FastAPI
-from routers import uploads
-from database import engine, Base
+
+from backend.database import Base, engine
+from backend.routers import uploads
 
 Base.metadata.create_all(bind=engine)
 

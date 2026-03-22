@@ -1,18 +1,41 @@
 import "../styles/landing-page.css";
 import { useState } from "react";
 import FileUpload from "../components/FileUpload";
+import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [uploadMode, setUploadMode] = useState("vocab");
+  const navigate = useNavigate();
 
   const generateText = uploadMode === "vocab" ? "Generate Flashcards" : "Generate Highlights";
 
-  const handleGenerateClick = () => {
-    if (!selectedFile) return;
+  const handleGenerateClick = async () => {
+    if (!selectedFile) return; //Add some error handling here
 
-    //Need to make an API call to the backend to process the uploaded
-  }
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const endpoint = uploadMode === "vocab" ? "/uploads/vocab" : "/uploads/clippings";
+
+      const response = await fetch(`http://localhost:8000${endpoint}`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("File upload failed");
+      }
+
+      const data = await response.json();
+      console.log("Upload successful:", data);
+      const sessionId = data.session_id;
+      navigate(`/import-review/${sessionId}`);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    }
+  };
 
   return (
     <main className="landing-page-container">
