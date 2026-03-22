@@ -55,7 +55,7 @@ def parse_clippings(file_text: str):
 
         parsed.append(
             {
-                "book": book_title,
+                "book_title": book_title,
                 "author": author,
                 "location": location,
                 "date": added_date.isoformat() if added_date else None,

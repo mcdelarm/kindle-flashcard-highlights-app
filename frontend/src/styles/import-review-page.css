@@ -1,0 +1,38 @@
+.import-review-container {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 0px 32px 80px 32px;
+}
+
+.review-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  padding-top: 48px;
+}
+
+.back-link {
+  text-decoration: none;
+  color: rgb(156, 163, 175);
+  display: flex;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  align-items: center;
+}
+
+.back-link span {
+  font-size: 16px;
+}
+
+.review-title {
+  color: rgb(15, 23, 34);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 48px;
+  letter-spacing: -0.02em;
+  margin: 0;
+  margin-block-end: 8px;
+}
