@@ -13,7 +13,8 @@ import {
   LeftArrowIcon,
   RightArrowIcon,
   XIcon,
-  CheckIcon
+  CheckIcon,
+  FlashCardsIcon
 } from "../static/Icons";
 
 const FlashCardPage = () => {
@@ -85,7 +86,7 @@ const FlashCardPage = () => {
   }
 
   if (flashcards.length === 0) {
-    return <EmptyState type="flashcards" />;
+    return <EmptyState title='No Flashcards Found' message='You have not generated any vocabulary flashcards yet. Upload your Kindle vocab.db file to get started and automatically generate study material' icon={<FlashCardsIcon />} />;
   }
 
   return (

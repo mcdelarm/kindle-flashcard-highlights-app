@@ -3,7 +3,7 @@ import Loading from "../components/Loading";
 import SingleSelect from "../components/SingleSelect";
 import EmptyState from "../components/EmptyState";
 import '../styles/highlights-page.css';
-import { InboxIcon, StarIcon, BookIcon, SearchIcon, LocationIcon, CalendarIcon, CopyIcon, TrashIcon } from "../static/Icons";
+import { InboxIcon, StarIcon, BookIcon, SearchIcon, LocationIcon, CalendarIcon, CopyIcon, TrashIcon, HighlightsIcon } from "../static/Icons";
 import noCoverImage from "../static/images/no-cover.png";
 
 const sortOptions = [
@@ -37,7 +37,7 @@ const HighlightsPage = () => {
   }
 
   if (highlights.length === 0) {
-    return <EmptyState type="highlights"/>;
+    return <EmptyState title='No Highlights Found' message="You haven't imported any book highlights yet. Upload your Kindle My Clippings.txt file to sync and organize your favorite quotes" icon={<HighlightsIcon />} />;
   }
 
   return (

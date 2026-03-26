@@ -203,8 +203,8 @@
 
 .generate-btn {
   font-size: 16px;
-  background-color: rgb(230, 255, 250);
-  color: rgb(15, 23, 34);
+  background-color: rgb(16, 185, 129);
+  color: white;
   border-radius: 6px;
   font-weight: 500;
   padding: 10px 18px;
@@ -213,8 +213,7 @@
 }
 
 .generate-btn:disabled {
-  background-color: rgb(229, 231, 235);
-  color: rgb(156, 163, 175);
+  opacity: 0.6;
   cursor: default;
 }
 

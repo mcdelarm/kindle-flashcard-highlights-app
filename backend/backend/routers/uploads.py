@@ -10,7 +10,7 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 def parse_clippings(file_text: str):
     entries = file_text.split("==========")
-    parsed = []
+    books = {}
 
     for entry in entries:
         entry = entry.strip().replace("\ufeff", "")
@@ -53,17 +53,20 @@ def parse_clippings(file_text: str):
         if len(content) < 5:
             continue
 
-        parsed.append(
-            {
-                "book_title": book_title,
+        if book_title not in books:
+            books[book_title] = {
                 "author": author,
-                "location": location,
-                "date": added_date.isoformat() if added_date else None,
-                "text": content,
+                "highlights": [],
+                "selected": True
             }
-        )
 
-    return parsed
+        books[book_title]["highlights"].append({
+            "location": location,
+            "date": added_date.isoformat() if added_date else None,
+            "text": content
+        })
+
+    return books
 
 
 def store_session(data: dict):
