@@ -11,6 +11,7 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 def parse_clippings(file_text: str):
     entries = file_text.split("==========")
     books = {}
+    next_item_id = 0
 
     for entry in entries:
         entry = entry.strip().replace("\ufeff", "")
@@ -56,15 +57,16 @@ def parse_clippings(file_text: str):
         if book_title not in books:
             books[book_title] = {
                 "author": author,
-                "highlights": [],
-                "selected": True
+                "items": [],
             }
 
-        books[book_title]["highlights"].append({
+        books[book_title]["items"].append({
+            "id": next_item_id,
             "location": location,
             "date": added_date.isoformat() if added_date else None,
             "text": content
         })
+        next_item_id += 1
 
     return books
 

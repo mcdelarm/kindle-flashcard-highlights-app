@@ -75,7 +75,7 @@
   padding: 10px 18px;
 }
 
-.review-content-container {
+.review-main-container {
   display: flex;
   gap: 24px;
   align-items: start;
@@ -116,4 +116,84 @@
 
 .review-book-list {
   max-height: 640px;
+  overflow-y: auto;
+}
+
+.review-book-item {
+  display: flex;
+  align-items: flex-start;
+  background-color: rgb(255, 255, 255);
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+  gap: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+}
+
+.review-book-item.active {
+  background-color: rgb(230, 255, 250);
+  border-left: 3px solid rgb(16, 185, 129);
+}
+
+.book-item-content {
+  flex: 0;
+}
+
+.book-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.book-item-meta {
+  color: rgb(156, 163, 175);
+  font-size: 13px;
+  font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-item-list {
+  max-height: 640px;
+  overflow-y: auto;
+}
+
+.review-word-item {
+  display: flex;
+  align-items: flex-start;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+  gap: 16px;
+  padding: 20px;
+}
+
+.word-item-text {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.word-item-text span {
+  color: rgb(156, 163, 175);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.word-item-context {
+  background-color: rgb(230, 255, 250);
+  border-radius: 6px;
+  color: rgb(156, 163, 175);
+  font-size: 14px;
+  font-weight: 400;
+  padding: 12px 16px;
+  text-overflow: ellipsis;
+}
+
+.word-item-content.deselected {
+  opacity: 0.6;
 }

@@ -11,10 +11,15 @@ export const ImportReviewPage = () => {
   const [loading, setLoading] = useState(false);
   const [sessionData, setSessionData] = useState(null);
   const [sessionType, setSessionType] = useState(null);
-  const [activeBook, setActiveBook] = useState(Object.keys(sessionData || {})[0]);
+  const [activeBook, setActiveBook] = useState(null);
+  const [deselectedItems, setDeselectedItems] = useState(new Set());
+  const [deselectedBooks, setDeselectedBooks] = useState(new Set());
 
   const bookCount = Object.keys(sessionData || {}).length;
-  const itemCount = Object.values(sessionData || {}).reduce((sum, book) => sum + book.highlights.length, 0);
+  const itemCount = Object.values(sessionData || {}).reduce(
+    (sum, book) => sum + book.items.length,
+    0,
+  );
   const subtitleText =
     sessionType === "clippings" ? (
       <>
@@ -25,6 +30,7 @@ export const ImportReviewPage = () => {
         words in <span className="file-name-span">vocab.db</span>
       </>
     );
+  const panelTitle = sessionType === "clippings" ? "Highlights" : "Words";
 
   useEffect(() => {
     const fetchSessionData = async () => {
@@ -49,16 +55,34 @@ export const ImportReviewPage = () => {
     fetchSessionData();
   }, [sessionId]);
 
+  useEffect(() => {
+    if (sessionData) {
+      setActiveBook(Object.keys(sessionData)[0]);
+    }
+  }, [sessionData]);
+
   const handleBooksSelectAll = () => {};
+
+  const handleBookSelect = () => {};
+
+  const handleItemSelectAll = () => {};
+
+  const handleItemSelect = (itemId) => () => {};
 
   if (loading) {
     return <Loading />;
   }
 
   if (!sessionData || Object.keys(sessionData).length === 0) {
-    return <EmptyState title="No Import Data Found" message="No imported file data has been found. Please upload a Kindle My Clippings.txt or vocab.db file to get started" icon={<EmptyFileIcon />} />;
+    return (
+      <EmptyState
+        title="No Import Data Found"
+        message="No imported file data has been found. Please upload a Kindle My Clippings.txt or vocab.db file to get started"
+        icon={<EmptyFileIcon />}
+      />
+    );
   }
-  
+
   return (
     <main className="import-review-container">
       <div className="review-header">
@@ -73,27 +97,84 @@ export const ImportReviewPage = () => {
           </p>
         </div>
         <div className="import-review-actions">
-          <span className="selection-count">112 selected</span>
+          <span className="selection-count">
+            {itemCount - deselectedItems.size} selected
+          </span>
           <button className="review-generate-btn">Generate Highlights</button>
         </div>
       </div>
       <div className="review-main-container">
         <div className="review-books-container">
-          
-        </div>
-        <div className="review-content-container">
           <div className="review-panel">
             <div className="review-panel-header">
               <span className="review-panel-title">Books ({bookCount})</span>
               <div className="review-select-all">
-                <CustomCheckbox selected={true} onChange={handleBooksSelectAll} />
-                Select All 
+                <CustomCheckbox
+                  selected={true}
+                  onChange={handleBooksSelectAll}
+                />
+                Select All
               </div>
             </div>
             <div className="review-book-list">
               {Object.entries(sessionData).map(([bookTitle, bookData]) => (
-                <div key={bookTitle} className={`review-book-item ${activeBook === bookTitle ? "active" : ""}`} onClick={() => setActiveBook(bookTitle)}></div>
+                <div
+                  key={bookTitle}
+                  className={`review-book-item ${activeBook === bookTitle ? "active" : ""}`}
+                  onClick={() => setActiveBook(bookTitle)}
+                >
+                  <CustomCheckbox selected={true} onChange={handleBookSelect} />
+                  <div className="book-item-content">
+                    <div className="book-item-title">{bookTitle}</div>
+                    <div className="book-item-meta">
+                      {bookData.author} &bull; {bookData.items.length}{" "}
+                      highlights
+                    </div>
+                  </div>
+                </div>
               ))}
+            </div>
+          </div>
+        </div>
+        <div className="review-content-container">
+          <div className="review-panel">
+            <div className="review-panel-header">
+              <span className="review-panel-title">
+                {panelTitle} from "{activeBook}"
+              </span>
+              <div className="review-select-all">
+                <CustomCheckbox
+                  selected={true}
+                  onChange={handleItemSelectAll}
+                />
+                Select All ({sessionData[activeBook]?.items.length || 0})
+              </div>
+            </div>
+            <div className="review-item-list">
+              {sessionData[activeBook]?.items.map((item, index) => {
+                const isSelected = !deselectedItems.has(item.id);
+                return (
+                  <div key={item.id} className="review-word-item">
+                    <CustomCheckbox
+                      selected={isSelected}
+                      onChange={handleItemSelect(item.id)}
+                    />
+                    <div className={`word-item-content ${!isSelected ? "deselected" : ""}`}>
+                      <div className="word-item-text">
+                        {sessionType === "clippings" ? (
+                          <>
+                            Highlight {index + 1}{" "}
+                            <span>&bull; Location {item.location}</span>
+                          </>
+                        ) : (
+                          <>{item.word}</>
+                        )}
+                      </div>
+                      <div className="word-item-context">"{item.text}"</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
