@@ -31,6 +31,18 @@ export const ImportReviewPage = () => {
       </>
     );
   const panelTitle = sessionType === "clippings" ? "Highlights" : "Words";
+  const selectedCount = Object.entries(sessionData || {}).reduce(
+    (sum, [bookTitle, book]) => {
+      if (deselectedBooks.has(bookTitle)) {
+        return sum;
+      }
+
+      return (
+        sum + book.items.filter((item) => !deselectedItems.has(item.id)).length
+      );
+    },
+    0,
+  );
 
   useEffect(() => {
     const fetchSessionData = async () => {
@@ -61,13 +73,118 @@ export const ImportReviewPage = () => {
     }
   }, [sessionData]);
 
-  const handleBooksSelectAll = () => {};
+  const handleBooksSelectAll = () => {
+    //if all books are currently selected, deselect all. Otherwise select all
+    if (deselectedBooks.size === 0) {
+      setDeselectedBooks(new Set(Object.keys(sessionData)));
+      setDeselectedItems(new Set());
+    } else {
+      setDeselectedBooks(new Set());
+      setDeselectedItems(new Set());
+    }
+  };
 
-  const handleBookSelect = () => {};
+  const handleBookSelect = (bookTitle) => {
+    const newDeselectedBooks = new Set(deselectedBooks);
+    const newDeselectedItems = new Set(deselectedItems);
 
-  const handleItemSelectAll = () => {};
+    const bookItemIds = sessionData[bookTitle].items.map((i) => i.id) || [];
 
-  const handleItemSelect = (itemId) => () => {};
+    if (deselectedBooks.has(bookTitle)) {
+      newDeselectedBooks.delete(bookTitle);
+      bookItemIds.forEach((id) => newDeselectedItems.delete(id));
+    } else {
+      newDeselectedBooks.add(bookTitle);
+      bookItemIds.forEach((id) => newDeselectedItems.delete(id));
+    }
+    setDeselectedBooks(newDeselectedBooks);
+    setDeselectedItems(newDeselectedItems);
+  };
+
+  const handleItemSelectAll = () => {
+    const items = sessionData[activeBook]?.items || [];
+
+    const allSelected =
+      !deselectedBooks.has(activeBook) &&
+      items.every((item) => !deselectedItems.has(item.id));
+
+    const newDeselectedItems = new Set(deselectedItems);
+    const newDeselectedBooks = new Set(deselectedBooks);
+
+    if (allSelected) {
+      //All selected -> deselect entire book
+      newDeselectedBooks.add(activeBook);
+      items.forEach((item) => newDeselectedItems.delete(item.id));
+    } else {
+      //Not all selected -> select everything
+      newDeselectedBooks.delete(activeBook);
+      items.forEach((item) => newDeselectedItems.delete(item.id));
+    }
+    setDeselectedBooks(newDeselectedBooks);
+    setDeselectedItems(newDeselectedItems);
+  };
+
+  const handleItemSelect = (itemId) => {
+    const bookItems = sessionData[activeBook]?.items || [];
+    const bookItemIds = bookItems.map((item) => item.id);
+
+    const nextDeselectedBooks = new Set(deselectedBooks);
+    const nextDeselectedItems = new Set(deselectedItems);
+
+    if (nextDeselectedBooks.has(activeBook)) {
+      nextDeselectedBooks.delete(activeBook);
+
+      bookItemIds.forEach((id) => {
+        if (id !== itemId) {
+          nextDeselectedItems.add(id);
+        }
+      });
+    } else {
+      if (nextDeselectedItems.has(itemId)) {
+        nextDeselectedItems.delete(itemId);
+      } else {
+        nextDeselectedItems.add(itemId);
+      }
+
+      const allDeselected = bookItemIds.every((id) =>
+        nextDeselectedItems.has(id),
+      );
+
+      if (allDeselected) {
+        nextDeselectedBooks.add(activeBook);
+        bookItemIds.forEach((id) => nextDeselectedItems.delete(id));
+      }
+    }
+
+    setDeselectedBooks(nextDeselectedBooks);
+    setDeselectedItems(nextDeselectedItems);
+  };
+
+  const renderContextSentence = (sentence, word) => {
+      if (!sentence || !word) return sentence;
+
+    if (sessionType === "clippings") {
+      return <em>"{sentence}"</em>;
+    }
+
+    const parts = sentence.split(new RegExp(`(${word})`, "gi"));
+
+    return (
+      <>
+        &quot;
+        {parts.map((part, index) =>
+          part.toLowerCase() === word.toLowerCase() ? (
+            <strong key={index} style={{ color: "rgb(15, 23, 34)", fontWeight: "600" }}>
+              {part}
+            </strong>
+          ) : (
+            part
+          ),
+        )}
+        &quot;
+      </>
+    );
+  };
 
   if (loading) {
     return <Loading />;
@@ -97,9 +214,7 @@ export const ImportReviewPage = () => {
           </p>
         </div>
         <div className="import-review-actions">
-          <span className="selection-count">
-            {itemCount - deselectedItems.size} selected
-          </span>
+          <span className="selection-count">{selectedCount} selected</span>
           <button className="review-generate-btn">Generate Highlights</button>
         </div>
       </div>
@@ -110,7 +225,7 @@ export const ImportReviewPage = () => {
               <span className="review-panel-title">Books ({bookCount})</span>
               <div className="review-select-all">
                 <CustomCheckbox
-                  selected={true}
+                  selected={deselectedBooks.size === 0}
                   onChange={handleBooksSelectAll}
                 />
                 Select All
@@ -119,11 +234,17 @@ export const ImportReviewPage = () => {
             <div className="review-book-list">
               {Object.entries(sessionData).map(([bookTitle, bookData]) => (
                 <div
-                  key={bookTitle}
+                  key={bookData.id}
                   className={`review-book-item ${activeBook === bookTitle ? "active" : ""}`}
                   onClick={() => setActiveBook(bookTitle)}
                 >
-                  <CustomCheckbox selected={true} onChange={handleBookSelect} />
+                  <CustomCheckbox
+                    selected={!deselectedBooks.has(bookTitle)}
+                    onChange={(event) => {
+                      event.stopPropagation();
+                      handleBookSelect(bookTitle);
+                    }}
+                  />
                   <div className="book-item-content">
                     <div className="book-item-title">{bookTitle}</div>
                     <div className="book-item-meta">
@@ -144,7 +265,12 @@ export const ImportReviewPage = () => {
               </span>
               <div className="review-select-all">
                 <CustomCheckbox
-                  selected={true}
+                  selected={
+                    !deselectedBooks.has(activeBook) &&
+                    sessionData[activeBook]?.items.every(
+                      (item) => !deselectedItems.has(item.id),
+                    )
+                  }
                   onChange={handleItemSelectAll}
                 />
                 Select All ({sessionData[activeBook]?.items.length || 0})
@@ -152,14 +278,18 @@ export const ImportReviewPage = () => {
             </div>
             <div className="review-item-list">
               {sessionData[activeBook]?.items.map((item, index) => {
-                const isSelected = !deselectedItems.has(item.id);
+                const isSelected =
+                  !deselectedBooks.has(activeBook) &&
+                  !deselectedItems.has(item.id);
                 return (
                   <div key={item.id} className="review-word-item">
                     <CustomCheckbox
                       selected={isSelected}
-                      onChange={handleItemSelect(item.id)}
+                      onChange={() => handleItemSelect(item.id)}
                     />
-                    <div className={`word-item-content ${!isSelected ? "deselected" : ""}`}>
+                    <div
+                      className={`word-item-content ${!isSelected ? "deselected" : ""}`}
+                    >
                       <div className="word-item-text">
                         {sessionType === "clippings" ? (
                           <>
@@ -167,10 +297,14 @@ export const ImportReviewPage = () => {
                             <span>&bull; Location {item.location}</span>
                           </>
                         ) : (
-                          <>{item.word}</>
+                          <>
+                            {item.stem
+                              ? item.stem.charAt(0).toUpperCase() + item.stem.slice(1)
+                              : ""}
+                          </>
                         )}
                       </div>
-                      <div className="word-item-context">"{item.text}"</div>
+                      <div className="word-item-context">{renderContextSentence(item.text, item.word)}</div>
                     </div>
                   </div>
                 );

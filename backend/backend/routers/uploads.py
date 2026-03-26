@@ -2,8 +2,11 @@ from backend.redis_client import redis_client
 from fastapi import APIRouter, UploadFile, File, HTTPException
 import uuid
 import json
+import sqlite3
+import tempfile
 import re
 from datetime import datetime
+import os
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
@@ -11,6 +14,7 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 def parse_clippings(file_text: str):
     entries = file_text.split("==========")
     books = {}
+    next_book_id = 0
     next_item_id = 0
 
     for entry in entries:
@@ -56,16 +60,20 @@ def parse_clippings(file_text: str):
 
         if book_title not in books:
             books[book_title] = {
+                "id": next_book_id,
                 "author": author,
                 "items": [],
             }
+            next_book_id += 1
 
-        books[book_title]["items"].append({
-            "id": next_item_id,
-            "location": location,
-            "date": added_date.isoformat() if added_date else None,
-            "text": content
-        })
+        books[book_title]["items"].append(
+            {
+                "id": next_item_id,
+                "location": location,
+                "date": added_date.isoformat() if added_date else None,
+                "text": content,
+            }
+        )
         next_item_id += 1
 
     return books
@@ -99,9 +107,79 @@ async def upload_clippings(file: UploadFile = File(...)):
 
     return {"session_id": session_id}
 
+
 @router.post("/vocab")
 async def upload_vocab(file: UploadFile = File(...)):
-    return
+    if not file.filename.endswith(".db"):
+        raise HTTPException(
+            status_code=400, detail="Invalid file type. Only .db files are allowed."
+        )
+
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as tmp_file:
+        temp_filename = tmp_file.name
+        tmp_file.write(await file.read())
+
+    try:
+        conn = sqlite3.connect(temp_filename)
+        cursor = conn.cursor()
+
+        query = """
+            SELECT
+                b.title AS book_title,
+                b.authors,
+                w.stem,
+                w.word,
+                w.lang,
+                l.usage
+            FROM Lookups l
+            JOIN Words w ON l.word_key = w.id
+            JOIN Book_Info b ON l.book_key = b.id
+            WHERE length(w.stem) > 2
+            AND l.usage LIKE '%' || w.word || '%'
+            GROUP BY b.id, w.stem
+            ORDER BY b.id;
+            """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        books = {}
+        next_book_id = 0
+        next_item_id = 0
+
+        for book_title, authors, stem, word, lang, usage in rows:
+            stem = re.sub(r"[^A-Za-z]", "", stem).lower()
+            if book_title not in books:
+                books[book_title] = {
+                    "id": next_book_id,
+                    "author": authors,
+                    "items": [],
+                }
+                next_book_id += 1
+
+            books[book_title]["items"].append(
+                {
+                    "id": next_item_id,
+                    "stem": stem,
+                    "word": word,
+                    "lang": lang,
+                    "text": usage,
+                }
+            )
+            next_item_id += 1
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"Error processing vocab database: {str(e)}"
+        )
+    finally:
+        conn.close()
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
+
+    session_id = store_session({"type": "vocab", "data": books})
+
+    return {"session_id": session_id}
 
 
 @router.get("/{session_id}")
@@ -110,13 +188,12 @@ def get_upload_session(session_id: str):
 
     if not session_data:
         raise HTTPException(status_code=404, detail="Session not found or expired")
-    
+
     session = json.loads(session_data)
 
     response = {
-        'session_id': session_id,
-        'type': session.get('type'),
-        'data': session.get('data')
-
+        "session_id": session_id,
+        "type": session.get("type"),
+        "data": session.get("data"),
     }
     return response
