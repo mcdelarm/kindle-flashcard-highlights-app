@@ -1,2 +1,7 @@
 from pydantic import BaseModel
-from datetime import datetime
+
+class GenerateRequest(BaseModel):
+    importSessionId: str
+    deselectedBooks: list[str]
+    deselectedItems: list[int]
+    generatedSessionId: str | None = None

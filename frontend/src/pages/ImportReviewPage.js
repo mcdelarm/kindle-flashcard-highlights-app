@@ -5,9 +5,11 @@ import CustomCheckbox from "../components/CustomCheckbox";
 import Loading from "../components/Loading";
 import EmptyState from "../components/EmptyState";
 import { EmptyFileIcon } from "../static/Icons";
+import { useNavigate } from "react-router-dom";
 
 export const ImportReviewPage = () => {
   const { sessionId } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [sessionData, setSessionData] = useState(null);
   const [sessionType, setSessionType] = useState(null);
@@ -15,13 +17,14 @@ export const ImportReviewPage = () => {
   const [deselectedItems, setDeselectedItems] = useState(new Set());
   const [deselectedBooks, setDeselectedBooks] = useState(new Set());
 
+  const typeLabel = sessionType === "highlights" ? "Highlights" : "Flashcards";
   const bookCount = Object.keys(sessionData || {}).length;
   const itemCount = Object.values(sessionData || {}).reduce(
     (sum, book) => sum + book.items.length,
     0,
   );
   const subtitleText =
-    sessionType === "clippings" ? (
+    sessionType === "highlights" ? (
       <>
         highlights in <span className="file-name-span">My Clippings.txt</span>
       </>
@@ -30,7 +33,7 @@ export const ImportReviewPage = () => {
         words in <span className="file-name-span">vocab.db</span>
       </>
     );
-  const panelTitle = sessionType === "clippings" ? "Highlights" : "Words";
+  const panelTitle = sessionType === "highlights" ? "Highlights" : "Words";
   const selectedCount = Object.entries(sessionData || {}).reduce(
     (sum, [bookTitle, book]) => {
       if (deselectedBooks.has(bookTitle)) {
@@ -161,9 +164,9 @@ export const ImportReviewPage = () => {
   };
 
   const renderContextSentence = (sentence, word) => {
-      if (!sentence || !word) return sentence;
+    if (!sentence || !word) return sentence;
 
-    if (sessionType === "clippings") {
+    if (sessionType === "highlights") {
       return <em>"{sentence}"</em>;
     }
 
@@ -174,7 +177,10 @@ export const ImportReviewPage = () => {
         &quot;
         {parts.map((part, index) =>
           part.toLowerCase() === word.toLowerCase() ? (
-            <strong key={index} style={{ color: "rgb(15, 23, 34)", fontWeight: "600" }}>
+            <strong
+              key={index}
+              style={{ color: "rgb(15, 23, 34)", fontWeight: "600" }}
+            >
               {part}
             </strong>
           ) : (
@@ -184,6 +190,41 @@ export const ImportReviewPage = () => {
         &quot;
       </>
     );
+  };
+
+  const getGeneratedSessionStorageKey = (type) => {
+    if (type === "highlights") {
+      return "generatedHighlightsSessionId";
+    } else if (type === "flashcards") {
+      return "generatedFlashcardsSessionId";
+    }
+    return null;
+  }
+
+  const handleGenerateClick = async () => {
+    const generatedSessionId = localStorage.getItem(getGeneratedSessionStorageKey(sessionType));
+
+    const payload = {
+      importSessionId: sessionId,
+      deselectedBooks: [...deselectedBooks],
+      deselectedItems: [...deselectedItems],
+      generatedSessionId
+    };
+
+    const response = await fetch("http://localhost:8000/uploads/generate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(`Failed to generate type: ${sessionType}`);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("Generation response:", data);
+    //possibly handle redis session id and store in local storage
+    navigate(`/${sessionType}`);
   };
 
   if (loading) {
@@ -215,7 +256,9 @@ export const ImportReviewPage = () => {
         </div>
         <div className="import-review-actions">
           <span className="selection-count">{selectedCount} selected</span>
-          <button className="review-generate-btn">Generate Highlights</button>
+          <button className="review-generate-btn" onClick={handleGenerateClick}>
+            Generate {typeLabel}
+          </button>
         </div>
       </div>
       <div className="review-main-container">
@@ -299,12 +342,15 @@ export const ImportReviewPage = () => {
                         ) : (
                           <>
                             {item.stem
-                              ? item.stem.charAt(0).toUpperCase() + item.stem.slice(1)
+                              ? item.stem.charAt(0).toUpperCase() +
+                                item.stem.slice(1)
                               : ""}
                           </>
                         )}
                       </div>
-                      <div className="word-item-context">{renderContextSentence(item.text, item.word)}</div>
+                      <div className="word-item-context">
+                        {renderContextSentence(item.text, item.word)}
+                      </div>
                     </div>
                   </div>
                 );
