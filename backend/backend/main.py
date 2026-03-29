@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.database import Base, engine
-from backend.routers import uploads
+from backend.routers import uploads, highlights, flashcards
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,3 +20,5 @@ app.add_middleware(
 )
 
 app.include_router(uploads.router)
+app.include_router(highlights.router)
+app.include_router(flashcards.router)

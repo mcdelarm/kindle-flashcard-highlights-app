@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Loading from "../components/Loading";
 import SingleSelect from "../components/SingleSelect";
 import EmptyState from "../components/EmptyState";
@@ -14,8 +14,8 @@ const sortOptions = [
 ]
 
 const HighlightsPage = () => {
-  const [highlights, setHighlights] = useState([{text: "You can make your SVG dynamic by passing props for fill and stroke instead of hardcoding them. That way, you only need one component.", book: { title: "Example Book" , author: "Example Author", id: 1}, location: "Page 10", date: "2024-01-01", starred: false}]);
-  const [filteredHighlights, setFilteredHighlights] = useState(highlights);
+  const [highlights, setHighlights] = useState([]);
+  const [filteredHighlights, setFilteredHighlights] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewFilter, setViewFilter] = useState("all");
   const [bookFilter, setBookFilter] = useState([]);
@@ -31,6 +31,26 @@ const HighlightsPage = () => {
       setBookFilter([...bookFilter, bookId]);
     }
   }
+
+  useEffect(() => {
+    const fetchHighlights = async () => {
+      try {
+        const response = await fetch ("http://localhost:8000/highlights", {
+          method: "GET",
+          credentials: "include"
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch highlights");
+        }
+        const data = await response.json();
+        setHighlights(data.highlights);
+        setFilteredHighlights(data.highlights);
+      } catch (error) {
+        console.error("Error fetching highlights:", error);
+      }
+    };
+    fetchHighlights();
+  }, []);
 
   if (loading) {
     return <Loading />;
