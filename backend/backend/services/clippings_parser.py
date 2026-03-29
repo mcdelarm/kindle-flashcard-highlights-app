@@ -1,5 +1,5 @@
 import re
-import datetime
+from datetime import datetime
 
 def parse_clippings(file_text: str):
     entries = file_text.split("==========")

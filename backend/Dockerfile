@@ -6,7 +6,7 @@ COPY requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -m nltk.downloader averaged_perceptron_tagger punkt
+RUN python -m nltk.downloader averaged_perceptron_tagger averaged_perceptron_tagger_eng punkt punkt_tab
 
 COPY . .
 

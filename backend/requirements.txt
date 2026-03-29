@@ -4,4 +4,5 @@ sqlalchemy==2.0.48
 psycopg[binary]==3.3.2
 python-multipart==0.0.20
 redis==7.1.0
-ntlk
+nltk==3.9.1
+requests==2.32.3

@@ -202,7 +202,8 @@ export const ImportReviewPage = () => {
   }
 
   const handleGenerateClick = async () => {
-    const generatedSessionId = localStorage.getItem(getGeneratedSessionStorageKey(sessionType));
+    const localStorageKey = getGeneratedSessionStorageKey(sessionType);
+    const generatedSessionId = localStorage.getItem(localStorageKey);
 
     const payload = {
       importSessionId: sessionId,
@@ -213,6 +214,9 @@ export const ImportReviewPage = () => {
 
     const response = await fetch("http://localhost:8000/uploads/generate", {
       method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(payload),
     });
 
@@ -224,6 +228,9 @@ export const ImportReviewPage = () => {
     const data = await response.json();
     console.log("Generation response:", data);
     //possibly handle redis session id and store in local storage
+    if (data.session_id) {
+      localStorage.setItem(localStorageKey, data.session_id);
+    }
     navigate(`/${sessionType}`);
   };
 
@@ -334,7 +341,7 @@ export const ImportReviewPage = () => {
                       className={`word-item-content ${!isSelected ? "deselected" : ""}`}
                     >
                       <div className="word-item-text">
-                        {sessionType === "clippings" ? (
+                        {sessionType === "highlights" ? (
                           <>
                             Highlight {index + 1}{" "}
                             <span>&bull; Location {item.location}</span>

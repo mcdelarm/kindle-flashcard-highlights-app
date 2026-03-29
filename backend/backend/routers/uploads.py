@@ -109,5 +109,7 @@ def generate_items(request: GenerateRequest):
         session_id = update_session(request.generatedSessionId, {"type": type, "data": selected_items}, hours=12)
     else:
         session_id = store_session({"type": type, "data": selected_items}, hours=12)
-    
+
+    redis_client.delete(request.importSessionId)
+
     return {"session_id": session_id}

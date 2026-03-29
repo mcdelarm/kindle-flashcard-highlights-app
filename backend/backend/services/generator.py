@@ -1,37 +1,6 @@
-# {
-#   "Atomic Habits": {
-#     "id": 0,
-#     "author": "James Clear",
-#     "items": [
-#       {
-#         "id": 0,
-#         "location": 1147,
-#         "date": "2024-01-01T10:30:00",
-#         "text": "You do not rise to the level of your goals..."
-#       },
-#       {
-#         "id": 1,
-#         "location": 1203,
-#         "date": "2024-01-02T08:15:00",
-#         "text": "Habits are the compound interest of self-improvement."
-#       }
-#     ]
-#   },
-#   "Deep Work": {
-#     "id": 1,
-#     "author": "Cal Newport",
-#     "items": [
-#       {
-#         "id": 2,
-#         "location": 532,
-#         "date": null,
-#         "text": "Deep work is the ability to focus without distraction..."
-#       }
-#     ]
-#   }
-# }
+
 import requests
-from ntlk import pos_tag, word_tokenize
+from nltk import pos_tag, word_tokenize
 
 POS_MAP = {
     "NN": "noun", "NNS": "noun", "NNP": "noun", "NNPS": "noun",
