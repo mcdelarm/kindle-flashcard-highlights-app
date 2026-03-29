@@ -1,5 +1,5 @@
 from backend.redis_client import redis_client
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Response
 import uuid
 import json
 import tempfile
@@ -87,29 +87,40 @@ def get_upload_session(session_id: str):
     return response
 
 @router.post("/generate")
-def generate_items(request: GenerateRequest):
-    import_session_data = redis_client.get(request.importSessionId)
+def generate_items(payload: GenerateRequest, request: Request, response: Response):
+    import_session_data = redis_client.get(payload.importSessionId)
     if not import_session_data:
         raise HTTPException(status_code=404, detail="Import session not found or expired")
     
     import_session = json.loads(import_session_data)
     books = import_session.get("data")
-    type = import_session.get("type")
+    session_type = import_session.get("type")
 
-    if not books or not type:
+    if not books or not session_type:
         raise HTTPException(status_code=400, detail="No import data found in session")
     
-    selected_items = generate_items_from_books(books, type, request.deselectedBooks, request.deselectedItems)
+    selected_items = generate_items_from_books(books, session_type, payload.deselectedBooks, payload.deselectedItems)
 
     if not selected_items:
         raise HTTPException(status_code=400, detail="No items selected for generation")
 
     
-    if request.generatedSessionId:
-        session_id = update_session(request.generatedSessionId, {"type": type, "data": selected_items}, hours=12)
+    generated_cookie_name = "flashcards_session_id" if session_type == "flashcards" else "highlights_session_id"
+    old_generated_session_id = request.cookies.get(generated_cookie_name)
+    if old_generated_session_id:
+        new_generated_session_id = update_session(old_generated_session_id, {"type": session_type, "data": selected_items}, hours=12)
     else:
-        session_id = store_session({"type": type, "data": selected_items}, hours=12)
+        new_generated_session_id = store_session({"type": session_type, "data": selected_items}, hours=12)
+    
+    redis_client.delete(payload.importSessionId)
 
-    redis_client.delete(request.importSessionId)
+    response.set_cookie(
+        key=generated_cookie_name,
+        value=new_generated_session_id,
+        max_age=12 * 3600,
+        httponly=True,
+        secure=False, # Set to True in production with HTTPS
+        samesite="lax", #Set to "strict" later in production
+    )
 
-    return {"session_id": session_id}
+    return {"status": "success"}

@@ -202,14 +202,10 @@ export const ImportReviewPage = () => {
   }
 
   const handleGenerateClick = async () => {
-    const localStorageKey = getGeneratedSessionStorageKey(sessionType);
-    const generatedSessionId = localStorage.getItem(localStorageKey);
-
     const payload = {
       importSessionId: sessionId,
       deselectedBooks: [...deselectedBooks],
       deselectedItems: [...deselectedItems],
-      generatedSessionId
     };
 
     const response = await fetch("http://localhost:8000/uploads/generate", {
@@ -217,6 +213,7 @@ export const ImportReviewPage = () => {
       headers: {
         "Content-Type": "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(payload),
     });
 
@@ -227,10 +224,6 @@ export const ImportReviewPage = () => {
 
     const data = await response.json();
     console.log("Generation response:", data);
-    //possibly handle redis session id and store in local storage
-    if (data.session_id) {
-      localStorage.setItem(localStorageKey, data.session_id);
-    }
     navigate(`/${sessionType}`);
   };
 
