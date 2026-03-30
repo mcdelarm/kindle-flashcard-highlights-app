@@ -52,7 +52,7 @@ def generate_items_from_books(books, type, deselected_books, deselected_items):
             else:
                 if type == "flashcards":
                     #need to add a definition for the stem
-                    part_of_speech = fetch_part_of_speech(item['word'], item['text'])
+                    part_of_speech = fetch_part_of_speech(item['word'], item['context'])
                     if not part_of_speech or part_of_speech == "unknown":
                         continue
                     item['part_of_speech'] = part_of_speech

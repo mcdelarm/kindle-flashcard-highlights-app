@@ -163,12 +163,12 @@ export const ImportReviewPage = () => {
     setDeselectedItems(nextDeselectedItems);
   };
 
-  const renderContextSentence = (sentence, word) => {
-    if (!sentence || !word) return sentence;
-
+  const renderContextSentence = (item) => {
     if (sessionType === "highlights") {
-      return <em>"{sentence}"</em>;
+      return <em>"{item["text"]}"</em>;
     }
+    const sentence = item.context;
+    const word = item.word;
 
     const parts = sentence.split(new RegExp(`(${word})`, "gi"));
 
@@ -191,15 +191,6 @@ export const ImportReviewPage = () => {
       </>
     );
   };
-
-  const getGeneratedSessionStorageKey = (type) => {
-    if (type === "highlights") {
-      return "generatedHighlightsSessionId";
-    } else if (type === "flashcards") {
-      return "generatedFlashcardsSessionId";
-    }
-    return null;
-  }
 
   const handleGenerateClick = async () => {
     const payload = {
@@ -349,7 +340,7 @@ export const ImportReviewPage = () => {
                         )}
                       </div>
                       <div className="word-item-context">
-                        {renderContextSentence(item.text, item.word)}
+                        {renderContextSentence(item)}
                       </div>
                     </div>
                   </div>

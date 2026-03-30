@@ -4,7 +4,6 @@ import SingleSelect from "../components/SingleSelect";
 import EmptyState from "../components/EmptyState";
 import '../styles/highlights-page.css';
 import { InboxIcon, StarIcon, BookIcon, SearchIcon, LocationIcon, CalendarIcon, CopyIcon, TrashIcon, HighlightsIcon } from "../static/Icons";
-import noCoverImage from "../static/images/no-cover.png";
 
 const sortOptions = [
   { value: "newest", label: "Newest" },

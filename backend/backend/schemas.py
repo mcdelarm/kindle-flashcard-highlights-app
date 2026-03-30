@@ -7,3 +7,6 @@ class GenerateRequest(BaseModel):
 
 class HighlightUpdateRequest(BaseModel):
     starred: bool
+
+class FlashcardUpdateRequest(BaseModel):
+    known: bool

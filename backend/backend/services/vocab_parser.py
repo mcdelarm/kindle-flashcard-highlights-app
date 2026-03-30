@@ -47,7 +47,7 @@ def parse_vocab(db_path: str):
                     "stem": stem,
                     "word": word,
                     "lang": lang,
-                    "text": usage,
+                    "context": usage,
                 }
             )
             next_item_id += 1
