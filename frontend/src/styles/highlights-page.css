@@ -171,20 +171,6 @@
   gap: 6px;
 }
 
-.highlight-book-cover {
-  background-color: rgb(243, 244, 246);
-  border-radius: 2px;
-  box-sizing: border-box;
-  height: 28px;
-  object-fit: cover;
-  width: 20px;
-}
-
-.highlight-book-title {
-  color: rgb(15, 23, 34);
-  font-weight: 500;;
-}
-
 .highlight-card-controls {
   display: flex;
   flex-direction: column;

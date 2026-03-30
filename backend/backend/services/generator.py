@@ -60,8 +60,12 @@ def generate_items_from_books(books, type, deselected_books, deselected_items):
                     if not definition:
                         continue
                     item['definition'] = definition
-                item['book_title'] = book_title
-                item['author'] = book_data.get("author")
+                    item["known"] = False
+                else:
+                    #highlight items
+                    item['starred'] = False
+                book = {"title": book_title, "author": book_data.get("author"), "id": book_data.get("id")}
+                item['book'] = book
                 selected_items.append(item)
             
     return selected_items

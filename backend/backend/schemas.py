@@ -4,3 +4,6 @@ class GenerateRequest(BaseModel):
     importSessionId: str
     deselectedBooks: list[str]
     deselectedItems: list[int]
+
+class HighlightUpdateRequest(BaseModel):
+    starred: bool

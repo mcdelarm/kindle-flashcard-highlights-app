@@ -15,14 +15,46 @@ const sortOptions = [
 
 const HighlightsPage = () => {
   const [highlights, setHighlights] = useState([]);
-  const [filteredHighlights, setFilteredHighlights] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewFilter, setViewFilter] = useState("all");
   const [bookFilter, setBookFilter] = useState([]);
   const [searchFilter, setSearchFilter] = useState("");
   const [sortFilter, setSortFilter] = useState("newest");
 
-  const books = [...new Set(highlights.map(h => h.book))];
+  const books = Object.values(
+  highlights.reduce((acc, h) => {
+    acc[h.book.id] = h.book;
+    return acc;
+  }, {})
+);
+
+  const filteredHighlights = highlights
+    .filter((highlight) => {
+      if (viewFilter === "starred" && !highlight.starred) {
+        return false;
+      }
+      if (bookFilter.length > 0 && !bookFilter.includes(highlight.book.id)) {
+        return false;
+      }
+      if (searchFilter.trim()) {
+        const searchLower = searchFilter.trim().toLowerCase();
+        const textMatch = highlight.text.toLowerCase().includes(searchLower);
+
+        return textMatch;
+      }
+      return true;
+    })
+    .sort((first, second) => {
+      if (sortFilter === "newest") {
+        return new Date(second.date) - new Date(first.date);
+      } else if (sortFilter === "oldest") {
+        return new Date(first.date) - new Date(second.date);
+      } else if (sortFilter === "books_asc") {
+        return first.book.title.localeCompare(second.book.title);
+      } else if (sortFilter === "books_desc") {
+        return second.book.title.localeCompare(first.book.title);
+      }
+    })
 
   const handleBookFilterClick = (bookId) => {
     if (bookFilter.includes(bookId)) {
@@ -44,13 +76,111 @@ const HighlightsPage = () => {
         }
         const data = await response.json();
         setHighlights(data.highlights);
-        setFilteredHighlights(data.highlights);
       } catch (error) {
         console.error("Error fetching highlights:", error);
       }
     };
     fetchHighlights();
   }, []);
+
+  const formatDate = (value) => {
+  if (!value) return "No date";
+
+  return new Date(value).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+  const calculateAllHighlightCount = () => {
+    if (bookFilter.length === 0) {
+      return highlights.length;
+    }
+
+    return highlights.filter((highlight) =>
+      bookFilter.includes(highlight.book?.id),
+    ).length;
+  };
+
+  const calculateBookHighlightCount = (bookId, currentView) => {
+    return highlights.filter((highlight) => {
+      if (highlight.book?.id !== bookId) {
+        return false;
+      }
+
+      if (currentView === "starred" && !highlight.starred) {
+        return false;
+      }
+
+      return true;
+    }).length;
+  };
+
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (error) {
+      console.error("Failed to copy text:", error);
+    }
+  };
+
+  const handleStarClick = async (highlightId) => {
+    const target = highlights.find(h => h.id === highlightId);
+    if (!target) return;
+
+    const previousStarred = target.starred;
+    const nextStarred = !previousStarred;
+
+    setHighlights((currentHighlights) =>
+      currentHighlights.map((highlight) =>
+        highlight.id === highlightId ? { ...highlight, starred: nextStarred } : highlight
+      )
+    );
+
+    try {
+      const response = await fetch(`http://localhost:8000/highlights/${highlightId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ starred: nextStarred }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update highlight");
+      }
+    } catch (error) {
+      setHighlights((currentHighlights) =>
+        currentHighlights.map((highlight) =>
+          highlight.id === highlightId ? { ...highlight, starred: previousStarred } : highlight
+        )
+      );
+      console.error("Error updating highlight:", error);
+    }
+  };
+
+  const handleDelete = async (highlightId) => {
+    const target = highlights.find(h => h.id === highlightId);
+    if (!target) return;
+
+    setHighlights((currentHighlights) =>
+      currentHighlights.filter((highlight) => highlight.id !== highlightId)
+    );
+
+    try {
+      const response = await fetch(`http://localhost:8000/highlights/${highlightId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete highlight");
+      }
+    } catch (error) {
+      setHighlights((currentHighlights) => [...currentHighlights, target]);
+      console.error("Error deleting highlight:", error);
+    }
+  }
 
   if (loading) {
     return <Loading />;
@@ -73,7 +203,7 @@ const HighlightsPage = () => {
                 </div>
                 All Highlights
               </div>
-              <span className="sidebar-badge">124</span>
+              <span className="sidebar-badge">{calculateAllHighlightCount()}</span>
             </div>
             <div className={`sidebar-section-item ${viewFilter === "starred" ? "active" : ""}`} onClick={() => setViewFilter("starred")}>
               <div className="sidebar-item-left">
@@ -82,7 +212,7 @@ const HighlightsPage = () => {
                 </div>
                   Starred
               </div>
-              <span className="sidebar-badge">24</span>
+              <span className="sidebar-badge">{filteredHighlights.filter(h => h.starred).length}</span>
             </div>
           </div>
         </div>
@@ -97,7 +227,7 @@ const HighlightsPage = () => {
                   </div>
                   {book.title}
                 </div>
-                <span className="sidebar-badge">{highlights.filter(h => h.book.id === book.id).length}</span>
+                <span className="sidebar-badge">{calculateBookHighlightCount(book.id, viewFilter)}</span>
               </div>
             ))}
           </div>
@@ -129,40 +259,38 @@ const HighlightsPage = () => {
                   <div className="highlight-meta">
                     <div className="highlight-meta-left">
                       <div className="highlight-meta-item">
-                        {highlight.book?.cover ? (
-                          <img className="highlight-book-cover" src={highlight.book.cover} alt={highlight.book.title} />
-                        ) : (
-                          <img className="highlight-book-cover" src={noCoverImage} alt='No book cover available'></img>
-                        )}
-                        <span className="highlight-book-title">{highlight.book?.title || 'No title available'}</span>
+                        <div className="highlights-icon-container" style={{fontSize: "14px"}}>
+                          <BookIcon />
+                        </div>
+                        {highlight.book.title}
                       </div>
                       <div className="highlight-meta-item">
                         <div className="highlights-icon-container" style={{ fontSize: "14px" }}>
                           <LocationIcon />
                         </div>
-                        {highlight.location || 'No loc'}
+                        {highlight.location ? `loc ${highlight.location}` : 'No loc'}
                       </div>
                       <div className="highlight-meta-item">
                         <div className="highlights-icon-container" style={{fontSize: '14px'}}>
                           <CalendarIcon />
                         </div>
-                        {highlight.date || 'No date'}
+                        {formatDate(highlight.date)}
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="highlight-card-controls">
-                  <div className="highlights-icon-container" style={{fontSize: '20px'}}>
+                  <div className="highlights-icon-container" style={{fontSize: '20px', cursor: 'pointer'}} onClick={() => handleStarClick(highlight.id)}>
                     <StarIcon fill={highlight.starred ? 'rgb(245, 158, 11)' : 'none'} stroke={highlight.starred ? 'rgb(180, 83, 9)' : 'currentColor'} />
                   </div>
                   <div className="copy-delete-container">
-                    <button className="copy-delete-btn">
+                    <button className="copy-delete-btn" onClick={() => handleCopy(highlight.text)}>
                       <div className="highlights-icon-container" style={{fontSize: '14px'}}>
                         <CopyIcon />
                       </div>
                       Copy
                     </button>
-                    <button className="copy-delete-btn">
+                    <button className="copy-delete-btn" onClick={() => handleDelete(highlight.id)}>
                       <div className="highlights-icon-container" style={{fontSize: '14px'}}>
                         <TrashIcon />
                       </div>
