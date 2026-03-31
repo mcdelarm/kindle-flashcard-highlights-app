@@ -3,9 +3,9 @@ from backend.models import Flashcard, Highlight, Book
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 
-def get_or_create_book(book_data, db):
-    title = book_data.get("title").strip()
-    author = book_data.get("author").strip()
+def get_or_create_book(title, author, db):
+    title = title.strip()
+    author = author.strip()
 
     book = db.query(Book).filter_by(title=title, author=author).first()
 
@@ -29,7 +29,7 @@ def convert_session_to_flashcards(session_data, user_id, db):
           if not book_data:
               continue
 
-          book = get_or_create_book(book_data, db)
+          book = get_or_create_book(book_data.get("title"), book_data.get("author"), db)
 
           existing_flashcard = db.query(Flashcard).filter(
               Flashcard.user_id == user_id,
@@ -69,7 +69,7 @@ def convert_session_to_highlights(session_data, user_id, db):
           if not book_data:
               continue
 
-          book = get_or_create_book(book_data, db)
+          book = get_or_create_book(book_data.get("title"), book_data.get("author"), db)
 
           existing_highlight = db.query(Highlight).filter(
               Highlight.user_id == user_id,

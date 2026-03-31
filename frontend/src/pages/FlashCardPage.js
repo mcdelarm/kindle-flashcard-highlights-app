@@ -1,4 +1,4 @@
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import "../styles/flashcards-page.css";
 import Loading from "../components/Loading";
 import EmptyState from "../components/EmptyState";
@@ -99,7 +99,7 @@ const FlashCardPage = () => {
       const shuffled = [...prev];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j]] = [shuffled[j], shuffled[i]];
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
       return shuffled;
     });

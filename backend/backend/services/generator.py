@@ -1,4 +1,7 @@
-
+from backend.models import Flashcard, Highlight, Book
+from datetime import datetime
+from sqlalchemy.exc import IntegrityError
+from backend.services.auth_service import get_or_create_book
 import requests
 import spacy
 
@@ -45,6 +48,76 @@ def fetch_definition(pos, stem, lang):
         return None
     return None
 
+
+def convert_import_to_db(books, session_type, user_id, deselected_books, deselected_items, db):
+    deselected_books = set(deselected_books)
+    deselected_items = set(deselected_items)
+
+    try:
+        for book_title, book_data in books.items():
+            if book_title in deselected_books:
+                continue
+
+            book = get_or_create_book(book_title, book_data.get("author"), db)
+
+            for item in book_data.get("items"):
+                if item["id"] in deselected_items:
+                    continue
+                else:
+                    if session_type == "flashcards":
+                        part_of_speech = fetch_part_of_speech(item['word'], item['context'])
+                        if not part_of_speech or part_of_speech == "unknown":
+                            continue
+                        definition = fetch_definition(part_of_speech, item['stem'], item['lang'])
+                        if not definition:
+                            continue
+                        existing_flashcard = db.query(Flashcard).filter(
+                            Flashcard.user_id == user_id,
+                            Flashcard.stem == item.get("stem"),
+                            Flashcard.definition == definition,
+                            Flashcard.part_of_speech == part_of_speech
+                        ).first()
+
+                        if existing_flashcard:
+                            existing_flashcard.known = False
+                            existing_flashcard.book_id = book.id
+                            existing_flashcard.context = item.get("context")
+                            existing_flashcard.word = item.get("word")
+                            existing_flashcard.created_at = datetime.utcnow()
+                            continue
+                        flashcard = Flashcard(
+                            user_id=user_id,
+                            book_id=book.id,
+                            stem=item.get("stem"),
+                            word=item.get("word"),
+                            definition=definition,
+                            context=item.get("context"),
+                            part_of_speech=part_of_speech,
+                            known=False
+                        )
+                        db.add(flashcard)
+                    else:
+                        existing_highlight = db.query(Highlight).filter(
+                            Highlight.user_id == user_id,
+                            Highlight.text == item.get("text"),
+                            Highlight.book_id == book.id,
+                            Highlight.location == str(item.get("location"))
+                        ).first()
+                        if existing_highlight:
+                            continue
+                        highlight = Highlight(
+                            user_id=user_id,
+                            book_id=book.id,
+                            text=item.get("text"),
+                            location=str(item.get("location")),
+                            starred=False
+                        )
+                        db.add(highlight)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise
+
 def generate_items_from_books(books, type, deselected_books, deselected_items):
     deselected_books = set(deselected_books)
     deselected_items = set(deselected_items)
@@ -59,17 +132,14 @@ def generate_items_from_books(books, type, deselected_books, deselected_items):
             if item["id"] in deselected_items:
                 continue
             else:
-                print(f"Processing item {item['id']} of type {type} from book '{book_title}'")
                 if type == "flashcards":
                     #need to add a definition for the stem
                     part_of_speech = fetch_part_of_speech(item['word'], item['context'])
                     if not part_of_speech or part_of_speech == "unknown":
-                        print(f"Could not determine part of speech for word '{item['word']}'")
                         continue
                     item['part_of_speech'] = part_of_speech
                     definition = fetch_definition(item['part_of_speech'], item['stem'], item['lang'])
                     if not definition:
-                        print(f"Could not fetch definition for word '{item['stem']}' with part of speech '{item['part_of_speech']}'")
                         continue
                     item['definition'] = definition
                     item["known"] = False

@@ -1,5 +1,7 @@
 from backend.redis_client import redis_client
-from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Response
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request, Response, Depends
+from sqlalchemy.orm import Session
+from backend.database import get_db
 import uuid
 import json
 import tempfile
@@ -7,7 +9,8 @@ import os
 from backend.schemas import GenerateRequest
 from backend.services.clippings_parser import parse_clippings
 from backend.services.vocab_parser import parse_vocab
-from backend.services.generator import generate_items_from_books
+from backend.services.generator import generate_items_from_books, convert_import_to_db
+from backend.models import User
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
@@ -87,7 +90,7 @@ def get_upload_session(session_id: str):
     return response
 
 @router.post("/generate")
-def generate_items(payload: GenerateRequest, request: Request, response: Response):
+def generate_items(payload: GenerateRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     import_session_data = redis_client.get(payload.importSessionId)
     if not import_session_data:
         raise HTTPException(status_code=404, detail="Import session not found or expired")
@@ -99,12 +102,27 @@ def generate_items(payload: GenerateRequest, request: Request, response: Respons
     if not books or not session_type:
         raise HTTPException(status_code=400, detail="No import data found in session")
     
+    #check to see if user is logged in if they are, then we insert directly into postgredb instead of redis sesion
+    user_session_id = request.cookies.get("user_session_id")
+    if user_session_id:
+        user_session_data = redis_client.get(user_session_id)
+        if user_session_data:
+            user_session = json.loads(user_session_data)
+            user_id = user_session.get("user_id")
+            if user_id:
+                user = db.query(User).filter(User.id == user_id).first()
+                if user:
+                    #user is valid and logged in
+                    convert_import_to_db(books, session_type, user_id, payload.deselectedBooks, payload.deselectedItems, db)
+                    redis_client.delete(payload.importSessionId)
+                    return {"status": "success"}
+
+    #user is not logged in so we create a redis session instead
     selected_items = generate_items_from_books(books, session_type, payload.deselectedBooks, payload.deselectedItems)
 
     if not selected_items:
         raise HTTPException(status_code=400, detail="No items selected for generation")
 
-    
     generated_cookie_name = "flashcards_session_id" if session_type == "flashcards" else "highlights_session_id"
     old_generated_session_id = request.cookies.get(generated_cookie_name)
     if old_generated_session_id:

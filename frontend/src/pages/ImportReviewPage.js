@@ -193,6 +193,9 @@ export const ImportReviewPage = () => {
   };
 
   const handleGenerateClick = async () => {
+    if (selectedCount === 0) {
+      return;
+    }
     const payload = {
       importSessionId: sessionId,
       deselectedBooks: [...deselectedBooks],
