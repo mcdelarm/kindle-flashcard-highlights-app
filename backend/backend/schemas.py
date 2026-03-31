@@ -10,3 +10,7 @@ class HighlightUpdateRequest(BaseModel):
 
 class FlashcardUpdateRequest(BaseModel):
     known: bool
+
+class AuthCrendentialsRequest(BaseModel):
+    email: str
+    password: str

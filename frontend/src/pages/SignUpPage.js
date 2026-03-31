@@ -1,7 +1,52 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
 import "../styles/auth-pages.css";
 
 const SignUpPage = () => {
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+
+    const formData = new FormData(e.target);
+    const email = formData.get("email")?.toString().trim() || "";
+    const password = formData.get("password")?.toString().trim() || "";
+    const confirmPassword = formData.get("confirmPassword")?.toString().trim() || "";
+
+    if (!email || !password || !confirmPassword) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:8000/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.detail || "Failed to create account.");
+      }
+
+      console.log("Signup successful:", data);
+    } catch (err) {
+      console.error("Error during signup:", err);
+      setError("An error occurred. Please try again.");
+  }
+  };
+
   return (
     <main className="auth-page">
       <section className="auth-card auth-card-centered">
@@ -14,7 +59,7 @@ const SignUpPage = () => {
           </p>
         </div>
 
-        <form className="auth-form">
+        <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span className="auth-label">Email</span>
             <input
@@ -47,6 +92,8 @@ const SignUpPage = () => {
               autoComplete="new-password"
             />
           </label>
+
+          {error && <p className="auth-error-message">{error}</p>}
 
           <button className="auth-submit-button" type="submit">
             Create Account

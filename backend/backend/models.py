@@ -26,6 +26,7 @@ class Book(Base):
 
 class Flashcard(Base):
   __tablename__ = 'flashcards'
+  __table_args__ = (UniqueConstraint('user_id', 'part_of_speech', 'stem', 'definition', name='uq_user_stem_def_pos'),)
 
   id = Column(Integer, primary_key=True, index=True)
   user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))
@@ -43,6 +44,7 @@ class Flashcard(Base):
 
 class Highlight(Base):
   __tablename__ = 'highlights'
+  __table_args__ = (UniqueConstraint('user_id', 'text', 'book_id', 'location', name='uq_user_text_location_book'),)
 
   id = Column(Integer, primary_key=True, index=True)
   user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'))

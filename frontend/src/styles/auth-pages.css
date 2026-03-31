@@ -95,6 +95,17 @@
 	color: rgb(156, 163, 175);
 }
 
+.auth-error-message {
+	background-color: rgb(254, 242, 242);
+	border: 1px solid rgb(254, 202, 202);
+	border-radius: 10px;
+	color: rgb(185, 28, 28);
+	font-size: 14px;
+	line-height: 1.5;
+	margin: 0;
+	padding: 12px 14px;
+}
+
 .auth-submit-button {
 	background-color: rgb(16, 185, 129);
 	border: none;
