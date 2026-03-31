@@ -1,51 +1,51 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "../context/AuthContext";
 import "../styles/auth-pages.css";
 
 const SignUpPage = () => {
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const { user, authLoading, signup } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
 
     const formData = new FormData(e.target);
     const email = formData.get("email")?.toString().trim() || "";
-    const password = formData.get("password")?.toString().trim() || "";
-    const confirmPassword = formData.get("confirmPassword")?.toString().trim() || "";
+    const password = formData.get("password")?.toString() || "";
+    const confirmPassword = formData.get("confirmPassword")?.toString() || "";
 
     if (!email || !password || !confirmPassword) {
       setError("Please fill in all fields.");
+      setIsSubmitting(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:8000/auth/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || "Failed to create account.");
-      }
-
+      const data = await signup({ email, password });
       console.log("Signup successful:", data);
+      navigate("/", { replace: true });
     } catch (err) {
       console.error("Error during signup:", err);
-      setError("An error occurred. Please try again.");
-  }
+      setError(err.message || "An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (!authLoading && user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <main className="auth-page">
@@ -95,7 +95,7 @@ const SignUpPage = () => {
 
           {error && <p className="auth-error-message">{error}</p>}
 
-          <button className="auth-submit-button" type="submit">
+          <button className="auth-submit-button" type="submit" disabled={isSubmitting}>
             Create Account
           </button>
         </form>

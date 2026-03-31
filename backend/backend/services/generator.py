@@ -1,22 +1,31 @@
 
 import requests
-from nltk import pos_tag, word_tokenize
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
 
 POS_MAP = {
-    "NN": "noun", "NNS": "noun", "NNP": "noun", "NNPS": "noun",
-    "VB": "verb", "VBD": "verb", "VBG": "verb", "VBN": "verb", "VBP": "verb", "VBZ": "verb",
-    "JJ": "adjective", "JJR": "adjective", "JJS": "adjective",
-    "RB": "adverb", "RBR": "adverb", "RBS": "adverb",
-    "PRP": "pronoun", "PRP$": "pronoun", "WP": "pronoun", "WP$": "pronoun",
-    "IN": "preposition", "CC": "conjunction", "UH": "interjection"
+    "NOUN": "noun",
+    "PROPN": "noun",      # proper noun
+    "VERB": "verb",
+    "AUX": "verb",        # auxiliary verbs (is, have, etc.)
+    "ADJ": "adjective",
+    "ADV": "adverb",
+    "PRON": "pronoun",
+    "ADP": "preposition", # includes "of", "in", etc.
+    "CCONJ": "conjunction",
+    "SCONJ": "conjunction",
+    "INTJ": "interjection",
+    "NUM": "number",
+    "DET": "determiner",
+    "PART": "particle",
 }
 
 def fetch_part_of_speech(word, sentence):
-    tokens = word_tokenize(sentence)
-    tags = pos_tag(tokens)
-    for t, tag in tags:
-        if t.lower() == word.lower():
-            return POS_MAP.get(tag, "unknown")
+    doc = nlp(sentence)
+    for token in doc:
+        if token.text.lower() == word.lower():
+            return POS_MAP.get(token.pos_, "unknown")
     return None
 
 def fetch_definition(pos, stem, lang):
@@ -50,14 +59,17 @@ def generate_items_from_books(books, type, deselected_books, deselected_items):
             if item["id"] in deselected_items:
                 continue
             else:
+                print(f"Processing item {item['id']} of type {type} from book '{book_title}'")
                 if type == "flashcards":
                     #need to add a definition for the stem
                     part_of_speech = fetch_part_of_speech(item['word'], item['context'])
                     if not part_of_speech or part_of_speech == "unknown":
+                        print(f"Could not determine part of speech for word '{item['word']}'")
                         continue
                     item['part_of_speech'] = part_of_speech
                     definition = fetch_definition(item['part_of_speech'], item['stem'], item['lang'])
                     if not definition:
+                        print(f"Could not fetch definition for word '{item['stem']}' with part of speech '{item['part_of_speech']}'")
                         continue
                     item['definition'] = definition
                     item["known"] = False

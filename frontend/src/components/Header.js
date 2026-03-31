@@ -1,7 +1,10 @@
 import { NavLink } from "react-router-dom";
 import "../styles/globals.css";
+import { useAuth } from "../context/AuthContext";
 
 const Header = () => {
+  const { user, authLoading, logout } = useAuth();
+
   return (
     <header>
       <div className="header-left-container">
@@ -44,9 +47,15 @@ const Header = () => {
         </nav>
       </div>
       <div className="header-right-container">
-        <button className="login-button">
-          <NavLink className="login-button-link" to="/login">Login</NavLink>
-        </button>
+        {!authLoading && !user ? (
+          <button className="login-button">
+            <NavLink className="login-button-link" to="/login">Login</NavLink>
+          </button>
+        ) : (
+          <button className="login-button" onClick={logout}>
+            Logout
+          </button>
+        )}
       </div>
     </header>
   );

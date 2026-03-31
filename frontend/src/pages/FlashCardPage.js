@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import "../styles/flashcards-page.css";
 import Loading from "../components/Loading";
 import EmptyState from "../components/EmptyState";
@@ -10,7 +10,6 @@ import {
   DropDownCloseIcon,
   BookIcon,
   LeftArrowIcon,
-  RightArrowIcon,
   XIcon,
   CheckIcon,
   FlashCardsIcon,
@@ -18,7 +17,7 @@ import {
 
 const FlashCardPage = () => {
   const [flashcards, setFlashcards] = useState([]);
-  const [filteredFlashcards, setFilteredFlashcards] = useState([]);
+  const [displayOrder, setDisplayOrder] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all");
   const [isFlipped, setIsFlipped] = useState(false);
@@ -27,6 +26,7 @@ const FlashCardPage = () => {
 
   useEffect(() => {
     const fetchFlashcards = async () => {
+      setLoading(true);
       try {
         const response = await fetch("http://localhost:8000/flashcards", {
           method: "GET",
@@ -37,28 +37,31 @@ const FlashCardPage = () => {
         }
         const data = await response.json();
         setFlashcards(data.flashcards);
+        setDisplayOrder(data.flashcards.map((c) => c.id));
       } catch (error) {
         console.error("Error fetching flashcards:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchFlashcards();
   }, []);
 
-  useEffect(() => {
-    let filtered = flashcards;
-    if (filter === "known") {
-      filtered = flashcards.filter((card) => card.known);
-    } else if (filter === "unknown") {
-      filtered = flashcards.filter((card) => !card.known);
-    }
-    setFilteredFlashcards(filtered);
-    setCurrentIndex((prev) => Math.min(prev, filtered.length - 1));
-  }, [filter, flashcards]);
+  //Derive filtered cards from display order and filter values
+  const filteredFlashcards = displayOrder
+    .map((id) => flashcards.find((c) => c.id === id))
+    .filter((card) => {
+      if (!card) return false;
+      if (filter === "known") return card.known;
+      if (filter === "unknown") return !card.known;
+      return true;
+    });
 
   const knownCount = flashcards.filter((card) => card.known).length;
   const unknownCount = flashcards.length - knownCount;
   const flipLabelText = isFlipped ? "Back of card" : "Front of card";
-  const currentCard = filteredFlashcards[currentIndex];
+  const safeIndex = Math.min(currentIndex, Math.max(0, filteredFlashcards.length - 1));
+  const currentCard = filteredFlashcards[safeIndex];
   const capitalizedWord = currentCard?.stem
     ? currentCard.stem.charAt(0).toUpperCase() + currentCard.stem.slice(1)
     : "";
@@ -88,26 +91,38 @@ const FlashCardPage = () => {
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
     setCurrentIndex(0);
+    setIsFlipped(false);
   };
 
   const handleShuffle = () => {
-    // Implement shuffle logic here
-    const shuffled = [...filteredFlashcards];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    setFilteredFlashcards(shuffled);
+    setDisplayOrder((prev) => {
+      const shuffled = [...prev];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    });
     setCurrentIndex(0);
+    setIsFlipped(false);
   };
+
+  const goToNextCard = () => {
+    setCurrentIndex((prev) => Math.min(prev + 1, filteredFlashcards.length - 1));
+    setIsFlipped(false);
+  }
 
   const handleKnownClick = async (id, nextKnown) => {
     // Implement logic for marking card as known
     const target = flashcards.find(card => card.id === id);
     if (!target) return;
 
+    if (target.known === nextKnown) {
+      goToNextCard();
+      return; // No change needed
+    }
+
     const previousKnown = target.known;
-    if (previousKnown === nextKnown) return; // No change needed
 
     setFlashcards((currentFlashcards) =>
       currentFlashcards.map((card) =>
@@ -127,6 +142,7 @@ const FlashCardPage = () => {
       if (!response.ok) {
         throw new Error("Failed to update flashcard");
       }
+      goToNextCard();
     } catch (error) {
       setFlashcards((currentFlashcards) =>
         currentFlashcards.map((card) =>
@@ -179,7 +195,7 @@ const FlashCardPage = () => {
           </div>
           <div className="toolbar-right">
             <div className="toolbar-progress-text">
-              Card {filteredFlashcards.length ? currentIndex + 1 : 0} of {filteredFlashcards.length}
+              Card {filteredFlashcards.length ? safeIndex + 1 : 0} of {filteredFlashcards.length}
             </div>
             <div className="toolbar-shuffle-container" onClick={handleShuffle}>
               <div className="shuffle-icon-container">
@@ -254,12 +270,6 @@ const FlashCardPage = () => {
                           </div>
                           {currentCard.book.title}
                         </span>
-                        {/* <span className="context-meta-information">
-                        <div className="meta-icon-container">
-                          <LocationIcon />
-                        </div>
-                        {currentCard.book.location}
-                      </span> */}
                       </div>
                     </div>
                   )}
@@ -268,9 +278,11 @@ const FlashCardPage = () => {
             </div>
             <div className="flashcard-controls">
               <button
-                disabled={currentIndex === 0}
-                className={`pagination-button ${currentIndex === 0 ? "unclickable" : ""}`}
-                onClick={() => setCurrentIndex((prev) => prev - 1)}
+                disabled={safeIndex === 0}
+                className={`pagination-button ${safeIndex === 0 ? "unclickable" : ""}`}
+                onClick={() => {
+                  setCurrentIndex((prev) => prev - 1);
+                  setIsFlipped(false);}}
               >
                 <div className="arrow-icon-container">
                   <LeftArrowIcon />
@@ -297,16 +309,6 @@ const FlashCardPage = () => {
                   I Know This
                 </button>
               </div>
-              <button
-                disabled={currentIndex === filteredFlashcards.length - 1}
-                className={`pagination-button ${currentIndex === filteredFlashcards.length - 1 ? "unclickable" : ""}`}
-                onClick={() => setCurrentIndex((prev) => prev + 1)}
-              >
-                Next
-                <div className="arrow-icon-container">
-                  <RightArrowIcon />
-                </div>
-              </button>
             </div>
           </div>
         )}

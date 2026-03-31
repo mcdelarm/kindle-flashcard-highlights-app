@@ -75,7 +75,7 @@ def convert_session_to_highlights(session_data, user_id, db):
               Highlight.user_id == user_id,
               Highlight.text == item.get("text"),
               Highlight.book_id == book.id,
-              Highlight.location == item.get("location")
+              Highlight.location == str(item.get("location"))
           ).first()
 
           if existing_highlight:
@@ -85,7 +85,7 @@ def convert_session_to_highlights(session_data, user_id, db):
               user_id=user_id,
               book_id=book.id,
               text=item.get("text"),
-              location=item.get("location"),
+              location=str(item.get("location")),
               starred=False
           )
           db.add(highlight)

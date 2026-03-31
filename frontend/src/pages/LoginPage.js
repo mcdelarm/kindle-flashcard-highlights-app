@@ -1,7 +1,48 @@
-import { Link } from "react-router-dom";
+
+import { useState } from "react";
+import { Link, useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "../styles/auth-pages.css";
 
+
 const LoginPage = () => {
+  const { login, user, authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.target);
+    const email = formData.get("email")?.toString().trim() || "";
+    const password = formData.get("password")?.toString() || "";
+
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const data = await login({ email, password });
+      console.log("Login successful:", data);
+      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Error during login:", err);
+      setError(err.message || "Failed to log in.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+    // Redirect if already logged in
+  if (!authLoading && user) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <main className="auth-page">
       <section className="auth-card auth-card-centered">
@@ -13,7 +54,7 @@ const LoginPage = () => {
           </p>
         </div>
 
-        <form className="auth-form">
+        <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-field">
             <span className="auth-label">Email</span>
             <input
@@ -36,8 +77,10 @@ const LoginPage = () => {
             />
           </label>
 
-          <button className="auth-submit-button" type="submit">
-            Sign In
+          {error && <div className="auth-error-message">{error}</div>}
+
+          <button className="auth-submit-button" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Signing In..." : "Sign In"}
           </button>
         </form>
 

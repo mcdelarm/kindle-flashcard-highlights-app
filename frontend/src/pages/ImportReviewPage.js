@@ -282,8 +282,7 @@ export const ImportReviewPage = () => {
                   <div className="book-item-content">
                     <div className="book-item-title">{bookTitle}</div>
                     <div className="book-item-meta">
-                      {bookData.author} &bull; {bookData.items.length}{" "}
-                      highlights
+                      {bookData.author} &bull; {bookData.items.length}{" "} {panelTitle.toLowerCase()}
                     </div>
                   </div>
                 </div>
