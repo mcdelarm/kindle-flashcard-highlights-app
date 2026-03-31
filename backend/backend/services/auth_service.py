@@ -1,7 +1,9 @@
 
-from backend.models import Flashcard, Highlight, Book
+from backend.models import Flashcard, Highlight, Book, User
+from backend.redis_client import redis_client
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
+import json
 
 def get_or_create_book(title, author, db):
     title = title.strip()
@@ -86,10 +88,24 @@ def convert_session_to_highlights(session_data, user_id, db):
               book_id=book.id,
               text=item.get("text"),
               location=str(item.get("location")),
-              starred=False
+              starred=False,
+              date=item.get("date")
           )
           db.add(highlight)
       db.commit()
     except IntegrityError:
       db.rollback()
       raise
+
+def validate_user(request, db):
+    user_session_id = request.cookies.get("user_session_id")
+    if user_session_id:
+        user_session_data = redis_client.get(user_session_id)
+        if user_session_data:
+            user_session = json.loads(user_session_data)
+            user_id = user_session.get("user_id")
+            if user_id:
+                user = db.query(User).filter(User.id == user_id).first()
+                if user:
+                    return user_id
+    return None

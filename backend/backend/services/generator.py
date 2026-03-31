@@ -146,6 +146,7 @@ def generate_items_from_books(books, type, deselected_books, deselected_items):
                 else:
                     #highlight items
                     item['starred'] = False
+                    item['location'] = str(item.get("location"))
                 book = {"title": book_title, "author": book_data.get("author"), "id": book_data.get("id")}
                 item['book'] = book
                 selected_items.append(item)

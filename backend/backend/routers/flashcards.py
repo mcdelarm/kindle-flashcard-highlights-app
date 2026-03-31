@@ -1,12 +1,22 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
+from sqlalchemy.orm import Session
+from backend.database import get_db
 from backend.redis_client import redis_client
 import json
-from backend.schemas import FlashcardUpdateRequest
+from backend.schemas import FlashcardUpdateRequest, FlashcardListOut
+from backend.services.auth_service import validate_user
+from backend.models import Flashcard
 
 router = APIRouter(prefix="/flashcards", tags=["flashcards"])
 
-@router.get("/")
-def get_flashcards(request: Request):
+@router.get("/", response_model=FlashcardListOut)
+def get_flashcards(request: Request, db: Session = Depends(get_db)):
+    user_id = validate_user(request, db)
+    if user_id:
+        #user is authenticated and logged in
+        flashcards = db.query(Flashcard).filter(Flashcard.user_id == user_id).all()
+        return {"flashcards": flashcards}
+
     session_id = request.cookies.get("flashcards_session_id")
     if not session_id:
         raise HTTPException(status_code=404, detail="No flashcards session found")
@@ -19,7 +29,17 @@ def get_flashcards(request: Request):
     return {"flashcards": flashcards}
 
 @router.patch("/{flashcard_id}")
-def update_flashcard(flashcard_id: int, payload: FlashcardUpdateRequest, request: Request):
+def update_flashcard(flashcard_id: int, payload: FlashcardUpdateRequest, request: Request, db: Session = Depends(get_db)):
+    user_id = validate_user(request, db)
+    if user_id:
+        #user is authenticated and logged in
+        flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id, Flashcard.user_id == user_id).first()
+        if not flashcard:
+            raise HTTPException(status_code=404, detail="Flashcard not found")
+        flashcard.known = payload.known
+        db.commit()
+        return {"status": "success"}
+
     session_id = request.cookies.get("flashcards_session_id")
     if not session_id:
         raise HTTPException(status_code=404, detail="No flashcards session found")

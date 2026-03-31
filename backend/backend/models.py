@@ -51,7 +51,7 @@ class Highlight(Base):
   book_id = Column(Integer, ForeignKey('books.id', ondelete='CASCADE'))
   text = Column(Text, nullable=False)
   location = Column(String(255), nullable=True)
-  created_at = Column(TIMESTAMP, default=datetime.utcnow)
+  date = Column(TIMESTAMP, default=datetime.utcnow)
   starred = Column(Boolean, default=False) 
   owner = relationship('User', back_populates='highlights')
   book = relationship('Book')
