@@ -2,9 +2,7 @@ from backend.models import Flashcard, Highlight, Book
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from backend.services.auth_service import get_or_create_book
-import requests
 import spacy
-import time
 from nltk.corpus import wordnet as wn
 
 nlp = spacy.load("en_core_web_sm")
