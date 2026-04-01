@@ -11,18 +11,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt ./
 
-# Install normally (NOT --prefix)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Now spaCy is available → download works
 RUN python -m spacy download en_core_web_sm
+
+RUN python -m nltk.downloader -d /usr/local/share/nltk_data wordnet omw-1.4
 
 # ---- Final stage ----
 FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy installed packages + model
+ENV NLTK_DATA=/usr/local/share/nltk_data
+
 COPY --from=builder /usr/local /usr/local
 
 COPY . .

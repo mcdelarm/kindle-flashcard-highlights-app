@@ -30,7 +30,7 @@ def parse_clippings(file_text: str):
         if "Highlight" not in metadata_line:
             continue
         loc_match = re.search(r"Location (\d+)(?:-\d+)?", metadata_line)
-        location = int(loc_match.group(1)) if loc_match else None
+        location = str(int(loc_match.group(1))) if loc_match else None
 
         date_match = re.search(r"Added on (.*)$", metadata_line)
         added_date = None

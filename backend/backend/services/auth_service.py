@@ -41,7 +41,7 @@ def convert_session_to_flashcards(session_data, user_id, db):
           ).first()
 
           if existing_flashcard:
-              existing_flashcard.known = False
+              existing_flashcard.known = item.get("known", False)
               existing_flashcard.book_id = book.id
               existing_flashcard.context = item.get("context")
               existing_flashcard.word = item.get("word")
@@ -56,7 +56,7 @@ def convert_session_to_flashcards(session_data, user_id, db):
               definition=item.get("definition"),
               context=item.get("context"),
               part_of_speech=item.get("part_of_speech"),
-              known=False
+              known=item.get("known", False)
           )
           db.add(flashcard)
       db.commit()
@@ -88,7 +88,7 @@ def convert_session_to_highlights(session_data, user_id, db):
               book_id=book.id,
               text=item.get("text"),
               location=str(item.get("location")),
-              starred=False,
+              starred=item.get("starred", False),
               date=item.get("date")
           )
           db.add(highlight)

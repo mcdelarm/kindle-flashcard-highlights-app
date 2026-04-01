@@ -4,49 +4,43 @@ from sqlalchemy.exc import IntegrityError
 from backend.services.auth_service import get_or_create_book
 import requests
 import spacy
+import time
+from nltk.corpus import wordnet as wn
 
 nlp = spacy.load("en_core_web_sm")
 
-POS_MAP = {
-    "NOUN": "noun",
-    "PROPN": "noun",      # proper noun
-    "VERB": "verb",
-    "AUX": "verb",        # auxiliary verbs (is, have, etc.)
-    "ADJ": "adjective",
-    "ADV": "adverb",
-    "PRON": "pronoun",
-    "ADP": "preposition", # includes "of", "in", etc.
-    "CCONJ": "conjunction",
-    "SCONJ": "conjunction",
-    "INTJ": "interjection",
-    "NUM": "number",
-    "DET": "determiner",
-    "PART": "particle",
+SPACY_TO_WN = {
+    "NOUN": wn.NOUN,
+    "PROPN": wn.NOUN,
+    "VERB": wn.VERB,
+    "AUX": wn.VERB,
+    "ADJ": wn.ADJ,
+    "ADV": wn.ADV,
+}
+
+WN_TO_STRING = {
+    wn.NOUN: "noun",
+    wn.VERB: "verb",
+    wn.ADJ: "adjective",
+    wn.ADV: "adverb",
 }
 
 def fetch_part_of_speech(word, sentence):
     doc = nlp(sentence)
     for token in doc:
         if token.text.lower() == word.lower():
-            return POS_MAP.get(token.pos_, "unknown")
+            wn_pos = SPACY_TO_WN.get(token.pos_)
+            if wn_pos:
+                return wn_pos
     return None
 
-def fetch_definition(pos, stem, lang):
-    url = f"https://api.dictionaryapi.dev/api/v2/entries/{lang}/{stem}"
-    try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-        data = response.json()
-        for entry in data:
-            meanings = entry.get("meanings", [])
-            for meaning in meanings:
-                if meaning.get("partOfSpeech") == pos:
-                    definitions = meaning.get("definitions", [])
-                    if definitions:
-                        return definitions[0].get("definition")
-    except requests.RequestException:
-        return None
-    return None
+def fetch_definition(pos, stem, lang="eng"):
+    pos_attempts = [pos, wn.NOUN, wn.VERB, wn.ADJ, wn.ADV]
+    for pos_try in pos_attempts:
+        synsets = wn.synsets(stem, pos=pos_try, lang=lang)
+        if synsets:
+            return pos_try, synsets[0].definition()
+    return None, None
 
 
 def convert_import_to_db(books, session_type, user_id, deselected_books, deselected_items, db):
@@ -65,17 +59,17 @@ def convert_import_to_db(books, session_type, user_id, deselected_books, deselec
                     continue
                 else:
                     if session_type == "flashcards":
-                        part_of_speech = fetch_part_of_speech(item['word'], item['context'])
-                        if not part_of_speech or part_of_speech == "unknown":
+                        pos_wn = fetch_part_of_speech(item['word'], item['context'])
+                        if not pos_wn:
                             continue
-                        definition = fetch_definition(part_of_speech, item['stem'], item['lang'])
-                        if not definition:
+                        pos_wn, definition = fetch_definition(pos_wn, item['stem'])
+                        if not definition or not pos_wn:
                             continue
                         existing_flashcard = db.query(Flashcard).filter(
                             Flashcard.user_id == user_id,
                             Flashcard.stem == item.get("stem"),
                             Flashcard.definition == definition,
-                            Flashcard.part_of_speech == part_of_speech
+                            Flashcard.part_of_speech == WN_TO_STRING[pos_wn]
                         ).first()
 
                         if existing_flashcard:
@@ -92,7 +86,7 @@ def convert_import_to_db(books, session_type, user_id, deselected_books, deselec
                             word=item.get("word"),
                             definition=definition,
                             context=item.get("context"),
-                            part_of_speech=part_of_speech,
+                            part_of_speech=WN_TO_STRING[pos_wn],
                             known=False
                         )
                         db.add(flashcard)
@@ -132,21 +126,23 @@ def generate_items_from_books(books, type, deselected_books, deselected_items):
             if item["id"] in deselected_items:
                 continue
             else:
+                print(f"Processing item {item['stem']}")
                 if type == "flashcards":
                     #need to add a definition for the stem
-                    part_of_speech = fetch_part_of_speech(item['word'], item['context'])
-                    if not part_of_speech or part_of_speech == "unknown":
+                    pos_wn = fetch_part_of_speech(item['word'], item['context'])
+                    if not pos_wn:
+                        print(f"Skipping {item['stem']} due to unknown part of speech")
                         continue
-                    item['part_of_speech'] = part_of_speech
-                    definition = fetch_definition(item['part_of_speech'], item['stem'], item['lang'])
-                    if not definition:
+                    pos_wn, definition = fetch_definition(pos_wn, item['stem'])
+                    if not definition or not pos_wn:
+                        print(f"Skipping {item['stem']} due to missing definition for part of speech {pos_wn}")
                         continue
                     item['definition'] = definition
+                    item['part_of_speech'] = WN_TO_STRING[pos_wn]
                     item["known"] = False
                 else:
                     #highlight items
                     item['starred'] = False
-                    item['location'] = str(item.get("location"))
                 book = {"title": book_title, "author": book_data.get("author"), "id": book_data.get("id")}
                 item['book'] = book
                 selected_items.append(item)
