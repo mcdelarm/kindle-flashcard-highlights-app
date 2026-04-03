@@ -32,6 +32,7 @@ const HighlightsPage = () => {
   const [sortFilter, setSortFilter] = useState("newest");
   const { user } = useAuth();
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
   const dropdownRefs = useRef({});
 
   useEffect(() => {
@@ -144,9 +145,11 @@ const HighlightsPage = () => {
     }).length;
   };
 
-  const handleCopy = async (text) => {
+  const handleCopy = async (text, highlightId) => {
     try {
       await navigator.clipboard.writeText(text);
+      setCopiedId(highlightId);
+      setTimeout(() => setCopiedId(null), 1500); // Reset copiedId after 1.5 seconds
     } catch (error) {
       console.error("Failed to copy text:", error);
     }
@@ -388,7 +391,7 @@ const HighlightsPage = () => {
                   <div className="copy-delete-container">
                     <button
                       className="copy-delete-btn"
-                      onClick={() => handleCopy(highlight.text)}
+                      onClick={() => handleCopy(highlight.text, highlight.id)}
                     >
                       <div
                         className="highlights-icon-container"
@@ -396,7 +399,7 @@ const HighlightsPage = () => {
                       >
                         <CopyIcon />
                       </div>
-                      Copy
+                      {copiedId === highlight.id ? "Copied!" : "Copy"}
                     </button>
                     <div
                       className="highlight-delete-container"
