@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "../styles/flashcards-page.css";
 import Loading from "../components/Loading";
 import EmptyState from "../components/EmptyState";
 import {
   ShuffleIcon,
-  FlipIcon,
   QuoteIcon,
   DropDownOpenIcon,
   DropDownCloseIcon,
@@ -13,6 +12,7 @@ import {
   XIcon,
   CheckIcon,
   FlashCardsIcon,
+  TrashIcon,
 } from "../static/Icons";
 import { useAuth } from "../context/AuthContext";
 
@@ -25,6 +25,8 @@ const FlashCardPage = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isContextOpen, setIsContextOpen] = useState(true);
   const { user } = useAuth();
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const ref = useRef(null);
 
 
   useEffect(() => {
@@ -52,6 +54,16 @@ const FlashCardPage = () => {
     fetchFlashcards();
   }, [user]);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (deleteConfirmationOpen && ref.current && !ref.current.contains(e.target)) {
+        setDeleteConfirmationOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [deleteConfirmationOpen]);
+
   //Derive filtered cards from display order and filter values
   const filteredFlashcards = displayOrder
     .map((id) => flashcards.find((c) => c.id === id))
@@ -64,7 +76,6 @@ const FlashCardPage = () => {
 
   const knownCount = flashcards.filter((card) => card.known).length;
   const unknownCount = flashcards.length - knownCount;
-  const flipLabelText = isFlipped ? "Back of card" : "Front of card";
   const safeIndex = Math.min(currentIndex, Math.max(0, filteredFlashcards.length - 1));
   const currentCard = filteredFlashcards[safeIndex];
   const capitalizedWord = currentCard?.stem
@@ -158,6 +169,45 @@ const FlashCardPage = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    const target = flashcards.find(card => card.id === id);
+    if (!target) return;
+
+    const flashcardIndex = flashcards.findIndex(card => card.id === id);
+    const displayIndex = displayOrder.findIndex(cardId => cardId === id);
+
+    // Optimistically remove card from UI
+    setFlashcards((currentFlashcards) =>
+      currentFlashcards.filter((card) => card.id !== id)
+    );
+    setDisplayOrder((currentOrder) => currentOrder.filter((cardId) => cardId !== id));
+
+    try {
+      const response = await fetch(`http://localhost:8000/flashcards/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete flashcard");
+      }
+    } catch (error) {
+      // Revert UI changes if deletion fails
+      setFlashcards((currentFlashcards) => {
+        const newFlashcards = [...currentFlashcards];
+        newFlashcards.splice(flashcardIndex, 0, target);
+        return newFlashcards;
+      });
+      setDisplayOrder((currentOrder) => {
+        const newOrder = [...currentOrder];
+        newOrder.splice(displayIndex, 0, target.id);
+        return newOrder;
+      });
+      console.error("Error deleting flashcard:", error);
+    } finally {
+      setDeleteConfirmationOpen(false);
+    }
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -212,14 +262,25 @@ const FlashCardPage = () => {
         {currentCard && (
           <div className="flashcard-container">
             <div className="flashcard">
-              <div className="flip-label-container">
-                <div className="flip-label">{flipLabelText}</div>
-                <div
-                  className="flip-icon-container"
-                  onClick={() => setIsFlipped(!isFlipped)}
-                >
-                  <FlipIcon />
-                </div>
+              <div className="delete-dropdown-container" ref={ref}>
+                <button className="delete-card-btn" onClick={() => setDeleteConfirmationOpen(!deleteConfirmationOpen)}>
+                  Delete
+                  <div className="trash-icon-container">
+                    <TrashIcon />
+                  </div>
+                </button>
+                {deleteConfirmationOpen && (
+                  <div className="delete-confirmation-dropdown">
+                    <div>
+                      <div className="delete-dropdown-title">Delete this flashcard?</div>
+                      <div className="delete-dropdown-msg">This action is permanent and cannot be undone.</div>
+                    </div>
+                    <div className="delete-dropdown-actions">
+                      <button className="delete-cancel-btn" onClick={() => setDeleteConfirmationOpen(false)}>Cancel</button>
+                      <button className="delete-confirm-btn" onClick={() => handleDelete(currentCard.id)}>Delete</button>
+                    </div>
+                  </div>
+                )}
               </div>
               <div
                 className="flashcard-content"
