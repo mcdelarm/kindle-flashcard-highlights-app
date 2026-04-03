@@ -1,11 +1,28 @@
 import { NavLink, useLocation } from "react-router-dom";
 import "../styles/globals.css";
 import { useAuth } from "../context/AuthContext";
-import { use } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const Header = () => {
   const { user, authLoading, logout } = useAuth();
   const location = useLocation();
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (logoutOpen && ref.current && !ref.current.contains(e.target)) {
+        setLogoutOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [logoutOpen]);
+
+  const handleLogout = () => {
+    logout();
+    setLogoutOpen(false);
+  }
 
   return (
     <header>
@@ -54,9 +71,23 @@ const Header = () => {
             <NavLink className="login-button-link" to="/login" state={{from: location}}>Login</NavLink>
           </button>
         ) : (
-          <button className="login-button" onClick={logout}>
-            Logout
-          </button>
+          <div className="logout-container" ref={ref}>
+            <button className="login-button" onClick={() => setLogoutOpen(!logoutOpen)}>
+              Logout
+            </button>
+            {logoutOpen && (
+              <div className="logout-dropdown">
+                <div>
+                  <div className="logout-dropdown-title">Confirm Logout</div>
+                  <div className="logout-dropdown-msg">Are you sure you want to log out of your account?</div>
+                </div>
+                <div className="logout-dropdown-actions">
+                  <button className="logout-cancel-btn" onClick={() => setLogoutOpen(false)}>Cancel</button>
+                  <button className="logout-confirm-btn" onClick={handleLogout}>Log out</button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </header>

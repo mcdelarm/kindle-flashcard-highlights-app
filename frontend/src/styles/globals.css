@@ -1,19 +1,31 @@
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Roboto",
+    "Oxygen",
+    "Ubuntu",
+    "Cantarell",
+    "Fira Sans",
+    "Droid Sans",
+    "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   min-height: 100%;
 }
 
 .app {
   margin: 0 auto;
-  background-color: #FBFEFD;
+  background-color: #fbfefd;
   max-width: 1440px;
   min-height: 100dvh;
   display: flex;
@@ -56,7 +68,7 @@ header {
   font-size: 18px;
   font-weight: 600;
   margin: 0;
-  color: #0F1722;
+  color: #0f1722;
 }
 
 .header-nav {
@@ -67,20 +79,20 @@ header {
 
 .header-nav-link {
   text-decoration: none;
-  color: #9CA3AF;
+  color: #9ca3af;
   font-size: 14px;
   font-weight: 500;
 }
 
 .header-nav-link.selected {
-  color: #0F1722;
+  color: #0f1722;
 }
 
 .login-button {
-  background-color: #10B981;
+  background-color: #10b981;
   font-weight: 500;
   font-size: 14px;
-  color : #FFFFFF;
+  color: #ffffff;
   border: none;
   padding: 10px 18px;
   border-radius: 8px;
@@ -91,6 +103,81 @@ header {
 .login-button-link {
   color: inherit;
   text-decoration: none;
+}
+
+.logout-container {
+  position: relative;
+}
+
+.logout-dropdown {
+  background-color: rgb(255, 255, 255);
+  border: 1.25px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, 0.12) 0px 12px 32px 0px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 300px;
+  z-index: 100;
+  box-sizing: border-box;
+}
+
+/* Arrow pointer for logout dropdown */
+.logout-dropdown::before {
+  content: "";
+  background-color: rgb(255, 255, 255);
+  border-left: 1.25px solid rgba(0, 0, 0, 0.08);
+  border-top: 1.25px solid rgba(0, 0, 0, 0.08);
+  height: 10px;
+  width: 10px;
+  position: absolute;
+  right: 32px;
+  top: -6px;
+  transform: rotate(45deg);
+}
+
+.logout-dropdown-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 24px;
+}
+
+.logout-dropdown-msg {
+  color: rgb(156, 163, 175);
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.logout-dropdown-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  line-height: 24px;
+}
+
+.logout-dropdown-actions button {
+  border: 1.25px solid rgba(0, 0, 0, 0);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.logout-cancel-btn {
+  background-color: transparent;
+}
+
+.logout-confirm-btn {
+  background-color: rgb(254, 226, 226);
+  color: rgb(127, 29, 29);
 }
 
 @media (max-width: 768px) {
@@ -232,7 +319,7 @@ header {
 /* SingleSelect component styles */
 
 .select-container {
-  position: relative;;
+  position: relative;
 }
 
 .select-dropdown {
@@ -295,7 +382,7 @@ header {
 /* CustomCheckbox component styles */
 
 .custom-checkbox {
-  background-color: rgb( 251, 254, 253);
+  background-color: rgb(251, 254, 253);
   align-items: center;
   border-radius: 4px;
   border: 1.5px solid rgb(156, 163, 175);
