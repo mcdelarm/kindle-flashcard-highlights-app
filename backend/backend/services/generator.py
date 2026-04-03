@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from backend.services.auth_service import get_or_create_book
 import spacy
 from nltk.corpus import wordnet as wn
+import re
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -24,6 +25,7 @@ WN_TO_STRING = {
 }
 
 def fetch_part_of_speech(word, sentence):
+    sentence = re.sub(r'[\u2014\u2013\u2012]', ' — ', sentence)
     doc = nlp(sentence)
     for token in doc:
         if token.text.lower() == word.lower():

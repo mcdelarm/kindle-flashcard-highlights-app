@@ -1,9 +1,11 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import "../styles/globals.css";
 import { useAuth } from "../context/AuthContext";
+import { use } from "react";
 
 const Header = () => {
   const { user, authLoading, logout } = useAuth();
+  const location = useLocation();
 
   return (
     <header>
@@ -49,7 +51,7 @@ const Header = () => {
       <div className="header-right-container">
         {!authLoading && !user ? (
           <button className="login-button">
-            <NavLink className="login-button-link" to="/login">Login</NavLink>
+            <NavLink className="login-button-link" to="/login" state={{from: location}}>Login</NavLink>
           </button>
         ) : (
           <button className="login-button" onClick={logout}>

@@ -4,6 +4,7 @@ import SingleSelect from "../components/SingleSelect";
 import EmptyState from "../components/EmptyState";
 import '../styles/highlights-page.css';
 import { InboxIcon, StarIcon, BookIcon, SearchIcon, LocationIcon, CalendarIcon, CopyIcon, TrashIcon, HighlightsIcon } from "../static/Icons";
+import { useAuth } from "../context/AuthContext";
 
 const sortOptions = [
   { value: "newest", label: "Newest" },
@@ -19,6 +20,7 @@ const HighlightsPage = () => {
   const [bookFilter, setBookFilter] = useState([]);
   const [searchFilter, setSearchFilter] = useState("");
   const [sortFilter, setSortFilter] = useState("newest");
+  const { user } = useAuth();
 
   const books = Object.values(
   highlights.reduce((acc, h) => {
@@ -76,11 +78,12 @@ const HighlightsPage = () => {
         const data = await response.json();
         setHighlights(data.highlights);
       } catch (error) {
+        setHighlights([]);
         console.error("Error fetching highlights:", error);
       }
     };
     fetchHighlights();
-  }, []);
+  }, [user]);
 
   const formatDate = (value) => {
   if (!value) return "No date";

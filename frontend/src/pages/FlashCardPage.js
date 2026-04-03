@@ -14,6 +14,7 @@ import {
   CheckIcon,
   FlashCardsIcon,
 } from "../static/Icons";
+import { useAuth } from "../context/AuthContext";
 
 const FlashCardPage = () => {
   const [flashcards, setFlashcards] = useState([]);
@@ -23,6 +24,8 @@ const FlashCardPage = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isContextOpen, setIsContextOpen] = useState(true);
+  const { user } = useAuth();
+
 
   useEffect(() => {
     const fetchFlashcards = async () => {
@@ -40,12 +43,14 @@ const FlashCardPage = () => {
         setDisplayOrder(data.flashcards.map((c) => c.id));
       } catch (error) {
         console.error("Error fetching flashcards:", error);
+        setFlashcards([]);
+        setDisplayOrder([]);
       } finally {
         setLoading(false);
       }
     };
     fetchFlashcards();
-  }, []);
+  }, [user]);
 
   //Derive filtered cards from display order and filter values
   const filteredFlashcards = displayOrder

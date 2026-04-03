@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link, useNavigate, Navigate } from "react-router-dom";
+import { Link, useNavigate, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../styles/auth-pages.css";
 
@@ -8,6 +8,8 @@ import "../styles/auth-pages.css";
 const LoginPage = () => {
   const { login, user, authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || "/";
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -29,7 +31,8 @@ const LoginPage = () => {
     try {
       const data = await login({ email, password });
       console.log("Login successful:", data);
-      navigate("/", { replace: true });
+      // Redirect to previous page or homepage
+      navigate(from, { replace: true });
     } catch (err) {
       console.error("Error during login:", err);
       setError(err.message || "Failed to log in.");
@@ -40,7 +43,7 @@ const LoginPage = () => {
 
     // Redirect if already logged in
   if (!authLoading && user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={from} replace />;
   }
 
   return (
@@ -85,7 +88,7 @@ const LoginPage = () => {
         </form>
 
         <p className="auth-footer-copy">
-          New here? <Link className="auth-footer-link" to="/signup">Create an account</Link>
+          New here? <Link className="auth-footer-link" to="/signup" state={{ from: {pathname: from}}}>Create an account</Link>
         </p>
       </section>
     </main>
