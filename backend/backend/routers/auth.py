@@ -109,6 +109,7 @@ def signup(
         httponly=True,
         secure=False,  # Set to True in production with HTTPS
         samesite="lax",  # Set to "strict" later in production
+        max_age=3600 * 24 * 7,
     )
 
     return {
@@ -148,6 +149,7 @@ def login(
     response.set_cookie(
         key="user_session_id",
         value=session_id,
+        max_age=3600 * 24 * 7,
         httponly=True,
         secure=False,  # Set to True in production with HTTPS
         samesite="lax",  # Set to "strict" later in production

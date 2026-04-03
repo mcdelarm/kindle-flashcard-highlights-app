@@ -109,3 +109,20 @@ def validate_user(request, db):
                 if user:
                     return user_id
     return None
+
+def extend_user_session(request, response):
+    user_session_id = request.cookies.get("user_session_id")
+    if not user_session_id:
+        return
+    user_session_data = redis_client.get(user_session_id)
+    if user_session_data:
+        redis_client.expire(user_session_id, 3600 * 24 * 7)  # Extend session by 1 week
+        response.set_cookie(
+            key="user_session_id",
+            value=user_session_id,
+            max_age=3600 * 24 * 7,
+            httponly=True,
+            secure=False,  # Set to True in production with HTTPS
+            samesite="lax",  # Set to "strict" later in production
+    )
+    return

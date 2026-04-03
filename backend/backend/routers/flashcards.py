@@ -1,20 +1,21 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Request, Depends, Response
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.redis_client import redis_client
 import json
 from backend.schemas import FlashcardUpdateRequest, FlashcardListOut
-from backend.services.auth_service import validate_user
+from backend.services.auth_service import validate_user, extend_user_session
 from backend.models import Flashcard
 
 router = APIRouter(prefix="/flashcards", tags=["flashcards"])
 
 @router.get("/", response_model=FlashcardListOut)
-def get_flashcards(request: Request, db: Session = Depends(get_db)):
+def get_flashcards(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = validate_user(request, db)
     if user_id:
         #user is authenticated and logged in
         flashcards = db.query(Flashcard).filter(Flashcard.user_id == user_id).all()
+        extend_user_session(request, response)
         return {"flashcards": flashcards}
 
     session_id = request.cookies.get("flashcards_session_id")
@@ -29,7 +30,7 @@ def get_flashcards(request: Request, db: Session = Depends(get_db)):
     return {"flashcards": flashcards}
 
 @router.patch("/{flashcard_id}")
-def update_flashcard(flashcard_id: int, payload: FlashcardUpdateRequest, request: Request, db: Session = Depends(get_db)):
+def update_flashcard(flashcard_id: int, payload: FlashcardUpdateRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = validate_user(request, db)
     if user_id:
         #user is authenticated and logged in
@@ -38,6 +39,7 @@ def update_flashcard(flashcard_id: int, payload: FlashcardUpdateRequest, request
             raise HTTPException(status_code=404, detail="Flashcard not found")
         flashcard.known = payload.known
         db.commit()
+        extend_user_session(request, response)
         return {"status": "success"}
 
     session_id = request.cookies.get("flashcards_session_id")

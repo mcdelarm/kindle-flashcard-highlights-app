@@ -10,8 +10,7 @@ from backend.schemas import GenerateRequest
 from backend.services.clippings_parser import parse_clippings
 from backend.services.vocab_parser import parse_vocab
 from backend.services.generator import generate_items_from_books, convert_import_to_db
-from backend.services.auth_service import validate_user
-from backend.models import User
+from backend.services.auth_service import validate_user, extend_user_session
 
 router = APIRouter(prefix="/uploads", tags=["uploads"])
 
@@ -109,6 +108,7 @@ def generate_items(payload: GenerateRequest, request: Request, response: Respons
         #user is valid and logged in
         convert_import_to_db(books, session_type, user_id, payload.deselectedBooks, payload.deselectedItems, db)
         redis_client.delete(payload.importSessionId)
+        extend_user_session(request, response)
         return {"status": "success"}
 
     #user is not logged in so we create a redis session instead

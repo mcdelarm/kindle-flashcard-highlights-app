@@ -1,20 +1,21 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Request, Depends, Response
 from sqlalchemy.orm import Session
 from backend.database import get_db
 from backend.redis_client import redis_client
 import json
 from backend.schemas import HighlightUpdateRequest, HighlightListOut
-from backend.services.auth_service import validate_user
+from backend.services.auth_service import validate_user, extend_user_session
 from backend.models import Highlight
 
 router = APIRouter(prefix="/highlights", tags=["highlights"])
 
 @router.get("/", response_model=HighlightListOut)
-def get_highlights(request: Request, db: Session = Depends(get_db)):
+def get_highlights(request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = validate_user(request, db)
     if user_id:
         #user is authenticated and logged in
         highlights = db.query(Highlight).filter(Highlight.user_id == user_id).all()
+        extend_user_session(request, response)
         return {"highlights": highlights}
 
     session_id = request.cookies.get("highlights_session_id")
@@ -29,7 +30,7 @@ def get_highlights(request: Request, db: Session = Depends(get_db)):
     return {"highlights": highlights}
 
 @router.patch("/{highlight_id}")
-def update_highlight(highlight_id: int, payload: HighlightUpdateRequest, request: Request, db: Session = Depends(get_db)):
+def update_highlight(highlight_id: int, payload: HighlightUpdateRequest, request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = validate_user(request, db)
     if user_id:
         #user is authenticated and logged in
@@ -38,6 +39,7 @@ def update_highlight(highlight_id: int, payload: HighlightUpdateRequest, request
             raise HTTPException(status_code=404, detail="Highlight not found")
         highlight.starred = payload.starred
         db.commit()
+        extend_user_session(request, response)
         return {"status": "success"}
 
     session_id = request.cookies.get("highlights_session_id")
@@ -67,7 +69,7 @@ def update_highlight(highlight_id: int, payload: HighlightUpdateRequest, request
     return {"status": "success"}
 
 @router.delete("/{highlight_id}")
-def delete_highlight(highlight_id: int, request: Request, db: Session = Depends(get_db)):
+def delete_highlight(highlight_id: int, request: Request, response: Response, db: Session = Depends(get_db)):
     user_id = validate_user(request, db)
     if user_id:
         #user is authenticated and logged in
@@ -76,6 +78,7 @@ def delete_highlight(highlight_id: int, request: Request, db: Session = Depends(
             raise HTTPException(status_code=404, detail="Highlight not found")
         db.delete(highlight)
         db.commit()
+        extend_user_session(request, response)
         return {"status": "success"}
 
     session_id = request.cookies.get("highlights_session_id")
