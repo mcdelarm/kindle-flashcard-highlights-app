@@ -37,7 +37,10 @@ def update_flashcard(flashcard_id: int, payload: FlashcardUpdateRequest, request
         flashcard = db.query(Flashcard).filter(Flashcard.id == flashcard_id, Flashcard.user_id == user_id).first()
         if not flashcard:
             raise HTTPException(status_code=404, detail="Flashcard not found")
-        flashcard.known = payload.known
+        if payload.known is not None:
+            flashcard.known = payload.known
+        if payload.definition is not None:
+            flashcard.definition = payload.definition
         db.commit()
         extend_user_session(request, response)
         return {"status": "success"}
@@ -59,7 +62,10 @@ def update_flashcard(flashcard_id: int, payload: FlashcardUpdateRequest, request
     if not flashcard_to_update:
         raise HTTPException(status_code=404, detail="Flashcard not found")
     
-    flashcard_to_update["known"] = payload.known
+    if payload.known is not None:
+        flashcard_to_update["known"] = payload.known
+    if payload.definition is not None:
+        flashcard_to_update["definition"] = payload.definition
     
     ttl = redis_client.ttl(session_id)
     if ttl <= 0:

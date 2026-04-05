@@ -15,6 +15,7 @@ import {
   TrashIcon,
 } from "../static/Icons";
 import { useAuth } from "../context/AuthContext";
+import FlashcardDefinition from "../components/FlashcardDefinition";
 
 const FlashCardPage = () => {
   const [flashcards, setFlashcards] = useState([]);
@@ -208,6 +209,40 @@ const FlashCardPage = () => {
     }
   };
 
+  const handleDefinitionUpdate = async (id, newDefinition) => {
+    const target = flashcards.find(card => card.id === id);
+    if (!target) return;
+
+    const previousDefinition = target.definition;
+
+    setFlashcards((currentFlashcards) =>
+      currentFlashcards.map((card) =>
+        card.id === id ? { ...card, definition: newDefinition } : card
+      )
+    );
+
+    try {
+      const response = await fetch(`http://localhost:8000/flashcards/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ definition: newDefinition }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to update flashcard definition");
+      }
+    } catch (error) {
+      setFlashcards((currentFlashcards) =>
+        currentFlashcards.map((card) =>
+          card.id === id ? { ...card, definition: previousDefinition } : card
+        )
+      );
+      console.error("Error updating flashcard definition:", error);
+    }
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -297,7 +332,7 @@ const FlashCardPage = () => {
                     </p>
                   </>
                 ) : (
-                  <p className="definition-text">{currentCard.definition}</p>
+                  <FlashcardDefinition currentCard={currentCard} onChange={handleDefinitionUpdate} />
                 )}
               </div>
               {currentCard.context && (

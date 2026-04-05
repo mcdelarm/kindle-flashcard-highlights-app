@@ -11,7 +11,8 @@ class HighlightUpdateRequest(BaseModel):
     starred: bool
 
 class FlashcardUpdateRequest(BaseModel):
-    known: bool
+    known: Optional[bool] = None
+    definition: Optional[str] = None
 
 class AuthCrendentialsRequest(BaseModel):
     email: str

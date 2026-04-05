@@ -33,7 +33,7 @@ class Flashcard(Base):
   book_id = Column(Integer, ForeignKey('books.id', ondelete='CASCADE'))
   stem = Column(String(255), nullable=False)
   word = Column(String(255), nullable=False)
-  definition = Column(Text, nullable=False)
+  definition = Column(Text, nullable=True)
   context = Column(Text, nullable=True)
   created_at = Column(TIMESTAMP, default=datetime.utcnow)
   known = Column(Boolean, default=False) 
